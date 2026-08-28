@@ -1,33 +1,21 @@
-﻿using ENRLLauncher.Core.Interfaces;
-using ENRLLauncher.Core.Logging;
-using ENRLLauncher.MVVM.Model;
+﻿using System.Windows;
+using ENRLLauncher.Core.Services;
 using ENRLLauncher.MVVM.ViewModel;
-using Microsoft.Extensions.DependencyInjection;
-using System.Configuration;
-using System.Data;
-using System.Windows;
 
-namespace ENRLLauncher
+namespace ENRLLauncher;
+
+public partial class App : Application
 {
-    public partial class App : Application
+    protected override void OnStartup(StartupEventArgs e)
     {
-        private IServiceProvider _serviceProvider = null!;
+        base.OnStartup(e);
 
-        public static IServiceProvider Services { get; private set; } = default!;
-        // DI container setup
-        private void ConfigureServices()
-        {
-            var services = new ServiceCollection();
-            //services
-            services.AddSingleton<IAppLogger>(_ => new FileLogger(Globals.g_LogsDir));
-            services.AddSingleton<ILauncherService>();
+        var launcherService = new LauncherService();
+        var homeVM = new HomeViewModel(launcherService);
+        var settingsVM = new SettingsViewModel();
+        var mainVM = new MainWindowViewModel(homeVM, settingsVM);
 
-            //Views
-            services.AddSingleton<MainWindowViewModel>();
-            services.AddSingleton<SettingsViewModel>();
-
-            _serviceProvider = services.BuildServiceProvider();
-        }
+        var mainWindow = new MainWindow(mainVM);
+        mainWindow.Show();
     }
-
 }

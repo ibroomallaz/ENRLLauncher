@@ -3,10 +3,97 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:ENRLLauncher.MVVM.View"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-            
+             d:DesignHeight="600" d:DesignWidth="1000">
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Settings &amp; Configuration" 
+                   FontSize="18" FontWeight="Bold" 
+                   Foreground="{DynamicResource Brush.Text.Primary}" Margin="0,0,0,16"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="340"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Preferences Left Pane -->
+            <Border Grid.Column="0" Background="{DynamicResource Brush.Surface.Primary}" 
+                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
+                    CornerRadius="8" Padding="16" Margin="0,0,12,0">
+                <StackPanel>
+                    <TextBlock Text="Startup &amp; Behavior" FontWeight="SemiBold" 
+                               Foreground="{DynamicResource Brush.UA.Sky}" FontSize="14" Margin="0,0,0,12"/>
+
+                    <RadioButton Content="Start in Maximized Dashboard" IsChecked="True" 
+                                 Foreground="{DynamicResource Brush.Text.Secondary}" Margin="0,0,0,8"/>
+                    <RadioButton Content="Start in Minimized Dock" 
+                                 Foreground="{DynamicResource Brush.Text.Secondary}" Margin="0,0,0,16"/>
+
+                    <CheckBox Content="Always on Top (Dock Mode)" 
+                              Foreground="{DynamicResource Brush.Text.Secondary}" Margin="0,0,0,10"/>
+                    <CheckBox Content="Close Launcher upon Launch" 
+                              Foreground="{DynamicResource Brush.Text.Secondary}" Margin="0,0,0,16"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Launch Items List Right Pane -->
+            <Border Grid.Column="1" Background="{DynamicResource Brush.Surface.Primary}" 
+                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
+                    CornerRadius="8" Padding="16">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Configured Launch Shortcuts" FontWeight="SemiBold" 
+                               Foreground="{DynamicResource Brush.UA.Sky}" FontSize="14" Margin="0,0,0,12"/>
+
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Items}" Background="Transparent" BorderThickness="0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource Brush.Surface.Secondary}" 
+                                        BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
+                                        CornerRadius="6" Padding="10" Margin="0,0,0,6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Brush.Text.Primary}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding TargetPath}" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="11" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Content="Edit" Margin="0,0,6,0" Padding="8,3" 
+                                                    Background="{DynamicResource Brush.Surface.Tertiary}" Foreground="{DynamicResource Brush.Text.Primary}" BorderThickness="0" Cursor="Hand"/>
+                                            <Button Content="Delete" Padding="8,3" 
+                                                    Background="{DynamicResource Brush.Danger}" Foreground="{DynamicResource Brush.Text.OnAccent}" BorderThickness="0" Cursor="Hand"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Button Grid.Row="2" Content="+ Add New Item" HorizontalAlignment="Left" Padding="12,6" 
+                            Background="{DynamicResource Brush.UA.Red}" Foreground="{DynamicResource Brush.Text.OnAccent}" 
+                            FontWeight="SemiBold" BorderThickness="0" Margin="0,12,0,0" Cursor="Hand"/>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Save Button Footer -->
+        <Button Grid.Row="2" Content="Save Changes" HorizontalAlignment="Right" Padding="16,6" 
+                Background="{DynamicResource Brush.Success}" Foreground="{DynamicResource Brush.Text.OnAccent}" 
+                FontWeight="Bold" BorderThickness="0" Margin="0,14,0,0" Cursor="Hand"/>
     </Grid>
 </UserControl>

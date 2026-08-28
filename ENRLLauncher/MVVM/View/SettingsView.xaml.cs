@@ -1,14 +1,11 @@
 ﻿using System.Windows.Controls;
-using ENRLLauncher.MVVM.ViewModel;
 
-namespace ENRLLauncher.MVVM.View
+namespace ENRLLauncher.MVVM.View;
+
+public partial class SettingsView : UserControl
 {
-    public partial class SettingsView : UserControl
+    public SettingsView()
     {
-        public SettingsView()
-        {
-            InitializeComponent();
-            DataContext ??= new SettingsViewModel();
-        }
+        InitializeComponent();
     }
 }

@@ -1,14 +1,18 @@
 ﻿<Application x:Class="ENRLLauncher.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:ENRLLauncher"
-             xmlns:view="clr-namespace:ENRLLauncher.MVVM.View"
-             xmlns:viewModel="clr-namespace:ENRLLauncher.MVVM.ViewModel"
-             StartupUri="MainWindow.xaml">
+             xmlns:vm="clr-namespace:ENRLLauncher.MVVM.ViewModel"
+             xmlns:views="clr-namespace:ENRLLauncher.MVVM.View">
     <Application.Resources>
         <ResourceDictionary>
-            <DataTemplate DataType="{x:Type viewModel:SettingsViewModel}">
-                <view:SettingsView/>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Themes/Index.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+                <views:HomeView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+                <views:SettingsView />
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

@@ -3,10 +3,275 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:ENRLLauncher"
+        xmlns:vm="clr-namespace:ENRLLauncher.MVVM.ViewModel"
+        xmlns:views="clr-namespace:ENRLLauncher.MVVM.View"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="ENRL Launcher"
+        Height="760" Width="1180"
+        MinHeight="500" MinWidth="600"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        KeyDown="Window_KeyDown">
 
-    </Grid>
+    <Window.Resources>
+        <!-- Sub-View DataTemplates -->
+        <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+            <views:HomeView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView />
+        </DataTemplate>
+
+        <!-- Compact Top Tab Button Style -->
+        <Style x:Key="SubtleTopTabButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#1B3459"/>
+            <Setter Property="Foreground" Value="#E2E8F0"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="10,2,10,4"/>
+            <Setter Property="BorderThickness" Value="1,0,1,1"/>
+            <Setter Property="BorderBrush" Value="#294C7A"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="btnBorder" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="0,0,6,6" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="btnBorder" Property="Background" Value="#284B77"/>
+                                <Setter TargetName="btnBorder" Property="BorderBrush" Value="{DynamicResource Brush.UA.Sky}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="btnBorder" Property="Background" Value="#132742"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Compact Top Close Button -->
+        <Style x:Key="SubtleTopTabCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource SubtleTopTabButtonStyle}">
+            <Setter Property="Foreground" Value="#F87171"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="btnBorder" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="0,0,6,6" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="btnBorder" Property="Background" Value="{DynamicResource Brush.UA.Red}"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Subtle Bottom Tab Button Style -->
+        <Style x:Key="SubtleBottomTabButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#1B3459"/>
+            <Setter Property="Foreground" Value="#CBD5E1"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,5,14,5"/>
+            <Setter Property="BorderThickness" Value="1,1,1,0"/>
+            <Setter Property="BorderBrush" Value="#294C7A"/>
+            <Setter Property="VerticalAlignment" Value="Bottom"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="btnBorder" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="8,8,0,0" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="btnBorder" Property="Background" Value="#284B77"/>
+                                <Setter TargetName="btnBorder" Property="BorderBrush" Value="{DynamicResource Brush.UA.Sky}"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="btnBorder" Property="Background" Value="#132742"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- Outer Window Root Container -->
+    <Border x:Name="WindowRootBorder"
+            Background="{DynamicResource Brush.Window.Background}" 
+            CornerRadius="14" 
+            BorderBrush="#294C7A" 
+            BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- Header Row -->
+                <RowDefinition Height="*"/>
+                <!-- Workspace Area -->
+                <RowDefinition Height="Auto"/>
+                <!-- Bottom Footer Row -->
+            </Grid.RowDefinitions>
+
+            <!-- TOP HEADER FRAME -->
+            <Grid Grid.Row="0">
+                <!-- Header Background with Matching Top Rounded Corners -->
+                <Border Height="34" 
+            VerticalAlignment="Top" 
+            Background="#142744" 
+            BorderBrush="#203E63" 
+            BorderThickness="0,0,0,1"
+            CornerRadius="13,13,0,0"/>
+
+                <!-- Header Content Grid -->
+                <Grid Background="Transparent" MouseDown="TitleBar_MouseDown">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Clock Column -->
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Window Controls Column -->
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Top-Left: Clock Tab -->
+                    <Border Grid.Column="0" 
+                Background="#1B3459" 
+                BorderBrush="#294C7A" 
+                BorderThickness="1,0,1,1" 
+                CornerRadius="0,0,6,6" 
+                Padding="12,3,12,5" 
+                VerticalAlignment="Top" 
+                Margin="16,0,0,0">
+                        <TextBlock Text="{Binding CurrentTime, FallbackValue='12:00 PM'}" 
+                       Foreground="#CBD5E1" 
+                       FontSize="11" 
+                       FontWeight="SemiBold"/>
+                    </Border>
+
+                    <!-- Center: Enlarged Protruding Hero Tab & Block A Badge -->
+                    <Border Grid.Column="0" Grid.ColumnSpan="3"
+                Background="#1B3459" 
+                BorderBrush="#294C7A" 
+                BorderThickness="1,0,1,1" 
+                CornerRadius="0,0,32,32" 
+                Padding="28,6,28,12" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Top"
+                Margin="0,0,0,-48">
+                        <StackPanel HorizontalAlignment="Center">
+                            <!-- Hero Title Text -->
+                            <TextBlock Text="Arizona Admissions" 
+                           FontSize="13" 
+                           FontWeight="Black" 
+                           Foreground="#FFFFFF" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,0,0,6"/>
+
+                            <!-- Enlarged Block A Logo Container -->
+                            <Border Width="48" Height="48" CornerRadius="24" 
+                        Background="Transparent"
+                        HorizontalAlignment="Center" 
+                        VerticalAlignment="Center">
+                                <Image Source="/Assets/img/ualogo.png" 
+                           Width="42" Height="42" 
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Top-Right: Window Transformation Controls -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top" Margin="0,0,16,0">
+                        <Button Content="🗕" 
+                    ToolTip="Minimize"
+                    Click="MinimizeButton_Click" 
+                    Style="{StaticResource SubtleTopTabButtonStyle}" 
+                    Margin="0,0,4,0" 
+                    MinWidth="36" 
+                    Height="24" 
+                    Padding="0"/>
+                        <Button x:Name="FullScreenBtn" 
+                    Content="⛶" 
+                    ToolTip="Toggle Fullscreen (F11)"
+                    Click="FullScreenButton_Click" 
+                    Style="{StaticResource SubtleTopTabButtonStyle}" 
+                    Margin="0,0,4,0" 
+                    MinWidth="38" 
+                    Height="24" 
+                    Padding="4,0"/>
+                        <Button Content="✕" 
+                    ToolTip="Close"
+                    Click="CloseButton_Click" 
+                    Style="{StaticResource SubtleTopTabCloseButtonStyle}" 
+                    MinWidth="36" 
+                    Height="24" 
+                    Padding="0"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <!-- CENTRAL WORKSPACE (Updated Top Margin to avoid tab collision) -->
+            <ContentControl Grid.Row="1" Content="{Binding CurrentView}" Margin="16,48,16,8"/>
+
+            <!-- BOTTOM FOOTER -->
+            <Grid Grid.Row="2" Background="Transparent" VerticalAlignment="Bottom">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- Status Tab -->
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- Action Tabs -->
+                </Grid.ColumnDefinitions>
+
+                <!-- Bottom-Left: Status Tab -->
+                <Border Grid.Column="0" 
+                        Background="#1B3459" 
+                        BorderBrush="#294C7A" 
+                        BorderThickness="1,1,1,0" 
+                        CornerRadius="8,8,0,0" 
+                        Padding="14,5,14,5" 
+                        VerticalAlignment="Bottom" 
+                        Margin="16,0,0,0">
+                    <TextBlock Text="{Binding HomeVM.StatusMessage, FallbackValue='All systems ready'}" 
+                               Foreground="#94A3B8" 
+                               FontSize="12" 
+                               FontWeight="Medium"/>
+                </Border>
+
+                <!-- Bottom-Right: Navigation & Edit Tabs -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,16,0">
+                    <Button Content="🏠 Home" Command="{Binding NavigateHomeCommand}" 
+                            Style="{StaticResource SubtleBottomTabButtonStyle}" Margin="0,0,5,0"/>
+                    <Button Content="✏ Edit Mode" Command="{Binding ToggleEditModeCommand}" 
+                            Style="{StaticResource SubtleBottomTabButtonStyle}" Margin="0,0,5,0"/>
+                    <Button Content="⚙ Settings" Command="{Binding NavigateSettingsCommand}" 
+                            Style="{StaticResource SubtleBottomTabButtonStyle}"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
 </Window>

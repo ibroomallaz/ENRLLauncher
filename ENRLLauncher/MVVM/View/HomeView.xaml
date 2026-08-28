@@ -3,10 +3,78 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:ENRLLauncher.MVVM.View"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-            
+             d:DesignHeight="550" d:DesignWidth="1100">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
+    <Grid Margin="0,10,0,0">
+        <!-- Adaptive Launch Grid & Drop Zone -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <WrapPanel HorizontalAlignment="Center" Orientation="Horizontal" MaxWidth="1200">
+
+                <!-- Dynamic Launch Cards -->
+                <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Width="210" Height="145" Margin="10" 
+                                    Background="{DynamicResource Brush.Surface.Primary}" 
+                                    BorderBrush="{DynamicResource Brush.Border}" 
+                                    BorderThickness="1" 
+                                    CornerRadius="10" 
+                                    Padding="14">
+                                <Grid>
+                                    <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                            Command="{Binding DataContext.LaunchItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}">
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Border Background="{DynamicResource Brush.Surface.Tertiary}" CornerRadius="4" Padding="8,3" Margin="0,0,0,8" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding TargetType}" Foreground="{DynamicResource Brush.UA.Oasis}" 
+                                                           FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Brush.Text.Primary}" 
+                                                       FontWeight="SemiBold" FontSize="14" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Description}" Foreground="{DynamicResource Brush.Text.Muted}" 
+                                                       FontSize="11" TextAlignment="Center" Margin="0,4,0,0" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!-- Edit Mode Delete Control -->
+                                    <Button Content="✕" 
+                                            Visibility="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}"
+                                            Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            HorizontalAlignment="Right" VerticalAlignment="Top" 
+                                            Background="{DynamicResource Brush.Danger}" 
+                                            Foreground="#FFFFFF" 
+                                            FontWeight="Bold"
+                                            Width="22" Height="22" BorderThickness="0" Cursor="Hand"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Drag-and-Drop Shortcut Card[cite: 4] -->
+                <Border Width="210" Height="145" Margin="10" 
+                        Background="{DynamicResource Brush.Surface.Secondary}" 
+                        CornerRadius="10" 
+                        BorderBrush="{DynamicResource Brush.Border.Light}" 
+                        BorderThickness="2"
+                        AllowDrop="True" Drop="DropZone_Drop" DragOver="DropZone_DragOver">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="+" FontSize="32" Foreground="{DynamicResource Brush.UA.Sky}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Drop File / Presentation" FontSize="12" Foreground="{DynamicResource Brush.Text.Secondary}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+            </WrapPanel>
+        </ScrollViewer>
     </Grid>
 </UserControl>
