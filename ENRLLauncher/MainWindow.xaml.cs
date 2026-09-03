@@ -13,9 +13,13 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+
         var launcherService = new LauncherService();
-        var homeVM = new HomeViewModel(launcherService);
+        var fileDialogService = new FileDialogService();
+
+        var homeVM = new HomeViewModel(launcherService, fileDialogService);
         var settingsVM = new SettingsViewModel();
+
         DataContext = new MainWindowViewModel(homeVM, settingsVM);
     }
 

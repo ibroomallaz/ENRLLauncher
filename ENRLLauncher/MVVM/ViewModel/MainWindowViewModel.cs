@@ -3,6 +3,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using ENRLLauncher.Core.Interfaces;
 using ENRLLauncher.Core.Utilities;
+using ENRLLauncher.MVVM.Model;
 
 namespace ENRLLauncher.MVVM.ViewModel;
 
@@ -16,6 +17,7 @@ public class MainWindowViewModel : ObservableObject
     private bool _isEditMode;
     private bool _isCompactMode;
 
+    public string AppVersion => Globals.g_AppVersion;
     public HomeViewModel HomeVM { get; }
     public SettingsViewModel SettingsVM { get; }
 
@@ -54,7 +56,7 @@ public class MainWindowViewModel : ObservableObject
             {
                 _isEditMode = value;
                 OnPropertyChanged();
-                HomeVM.IsEditMode = value;
+                HomeVM.IsEditMode = value; // Sync edit mode state to active Home view
             }
         }
     }

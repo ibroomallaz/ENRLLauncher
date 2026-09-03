@@ -10,7 +10,7 @@ public class LauncherService : ILauncherService
 {
     public bool CanLaunch(LaunchItem item)
     {
-        if (item == null || string.IsNullOrWhiteSpace(item.TargetPath))
+        if (item == null || !item.IsEnabled || string.IsNullOrWhiteSpace(item.TargetPath))
         {
             return false;
         }
@@ -66,8 +66,6 @@ public class LauncherService : ILauncherService
         {
             case LaunchTargetType.Presentation:
                 var ext = Path.GetExtension(item.TargetPath);
-
-                // Apply /s only to standard editable decks so PowerPoint forces presentation mode
                 if (ext.Equals(".pptx", StringComparison.OrdinalIgnoreCase) ||
                     ext.Equals(".ppt", StringComparison.OrdinalIgnoreCase) ||
                     ext.Equals(".pptm", StringComparison.OrdinalIgnoreCase))

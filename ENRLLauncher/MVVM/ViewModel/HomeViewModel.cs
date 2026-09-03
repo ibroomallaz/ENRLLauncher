@@ -13,12 +13,16 @@ namespace ENRLLauncher.MVVM.ViewModel;
 public class HomeViewModel : ObservableObject
 {
     private readonly ILauncherService _launcherService;
+    private readonly IFileDialogService _fileDialogService;
     private readonly IAppLogger? _logger;
 
     private bool _isEditMode;
     private string _statusMessage = "All systems ready";
 
     public ObservableCollection<LaunchItem> Items { get; } = [];
+
+    // Visible only during Edit Mode, or if no cards exist yet (empty state)
+    public bool IsDropCardVisible => IsEditMode || Items.Count == 0;
 
     public bool IsEditMode
     {
@@ -29,6 +33,10 @@ public class HomeViewModel : ObservableObject
             {
                 _isEditMode = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(IsDropCardVisible));
+                StatusMessage = _isEditMode
+                    ? "✏ Edit Mode Active — Drag cards to swap positions, click ✕ to delete"
+                    : "All systems ready";
             }
         }
     }
@@ -49,11 +57,21 @@ public class HomeViewModel : ObservableObject
     public ICommand LaunchItemCommand { get; }
     public ICommand AddDroppedFileCommand { get; }
     public ICommand RemoveItemCommand { get; }
+    public ICommand OpenFilePickerCommand { get; }
 
-    public HomeViewModel(ILauncherService launcherService, IAppLogger? logger = null)
+    public HomeViewModel(
+        ILauncherService launcherService,
+        IFileDialogService fileDialogService,
+        IAppLogger? logger = null)
     {
         _launcherService = launcherService ?? throw new ArgumentNullException(nameof(launcherService));
+        _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
         _logger = logger;
+
+        Items.CollectionChanged += (s, e) =>
+        {
+            OnPropertyChanged(nameof(IsDropCardVisible));
+        };
 
         LaunchItemCommand = new RelayCommand(async param =>
         {
@@ -76,17 +94,46 @@ public class HomeViewModel : ObservableObject
             if (param is LaunchItem item && Items.Contains(item))
             {
                 Items.Remove(item);
+                UpdateSortOrders();
             }
         });
+
+        OpenFilePickerCommand = new RelayCommand(_ => OpenFilePicker());
     }
 
-    private async Task LaunchAsync(LaunchItem item)
+    private void OpenFilePicker()
     {
-        if (IsEditMode || item == null) return;
+        const string filter = "All Supported Files|*.pptx;*.ppt;*.ppsx;*.pps;*.pptm;*.exe;*.bat;*.cmd;*.ps1;*.pdf;*.docx;*.xlsx;*.txt|" +
+                              "Presentations (*.pptx;*.ppt;*.ppsx)|*.pptx;*.ppt;*.ppsx;*.pps;*.pptm|" +
+                              "Applications (*.exe;*.bat;*.cmd)|*.exe;*.bat;*.cmd;*.ps1|" +
+                              "Documents (*.pdf;*.docx;*.xlsx)|*.pdf;*.docx;*.xlsx;*.txt|" +
+                              "All Files (*.*)|*.*";
 
-        StatusMessage = $"Launching {item.Title}...";
-        bool success = await _launcherService.LaunchAsync(item);
-        StatusMessage = success ? "All systems ready" : $"Failed to launch {item.Title}";
+        var selectedFiles = _fileDialogService.OpenFiles("Select Files or Presentations to Add", filter);
+        if (selectedFiles != null)
+        {
+            foreach (var file in selectedFiles)
+            {
+                AddDroppedFile(file);
+            }
+        }
+    }
+
+    public void Reorder(int oldIndex, int newIndex)
+    {
+        if (oldIndex >= 0 && oldIndex < Items.Count && newIndex >= 0 && newIndex < Items.Count && oldIndex != newIndex)
+        {
+            Items.Move(oldIndex, newIndex);
+            UpdateSortOrders();
+        }
+    }
+
+    private void UpdateSortOrders()
+    {
+        for (int i = 0; i < Items.Count; i++)
+        {
+            Items[i].SortOrder = i + 1;
+        }
     }
 
     public void AddDroppedFile(string filePath)
@@ -97,16 +144,26 @@ public class HomeViewModel : ObservableObject
         var targetType = ext switch
         {
             ".pptx" or ".ppt" or ".ppsx" or ".pps" or ".pptm" => LaunchTargetType.Presentation,
-            ".exe" or ".bat" or ".cmd" => LaunchTargetType.Application,
+            ".exe" or ".bat" or ".cmd" or ".ps1" => LaunchTargetType.Application,
             _ => LaunchTargetType.Document
         };
 
         Items.Add(new LaunchItem
         {
             Title = Path.GetFileNameWithoutExtension(filePath),
+            Description = ext.TrimStart('.').ToUpperInvariant(),
             TargetPath = filePath,
             TargetType = targetType,
             SortOrder = Items.Count + 1
         });
+    }
+
+    private async Task LaunchAsync(LaunchItem item)
+    {
+        if (IsEditMode || item == null) return;
+
+        StatusMessage = $"Launching {item.Title}...";
+        bool success = await _launcherService.LaunchAsync(item);
+        StatusMessage = success ? "All systems ready" : $"Failed to launch {item.Title}";
     }
 }

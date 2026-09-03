@@ -256,20 +256,37 @@
                         Padding="14,5,14,5" 
                         VerticalAlignment="Bottom" 
                         Margin="16,0,0,0">
-                    <TextBlock Text="{Binding HomeVM.StatusMessage, FallbackValue='All systems ready'}" 
+                    <TextBlock Text="{Binding AppVersion, FallbackValue='v1.0.0'}" 
                                Foreground="#94A3B8" 
                                FontSize="12" 
-                               FontWeight="Medium"/>
+                               FontWeight="SemiBold"/>
                 </Border>
 
                 <!-- Bottom-Right: Navigation & Edit Tabs -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,16,0">
                     <Button Content="🏠 Home" Command="{Binding NavigateHomeCommand}" 
-                            Style="{StaticResource SubtleBottomTabButtonStyle}" Margin="0,0,5,0"/>
-                    <Button Content="✏ Edit Mode" Command="{Binding ToggleEditModeCommand}" 
-                            Style="{StaticResource SubtleBottomTabButtonStyle}" Margin="0,0,5,0"/>
+            Style="{StaticResource SubtleBottomTabButtonStyle}" Margin="0,0,5,0"/>
+
+                    <!-- Dynamic Edit Mode Button -->
+                    <Button Command="{Binding ToggleEditModeCommand}" Margin="0,0,5,0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SubtleBottomTabButtonStyle}">
+                                <Setter Property="Content" Value="✏ Edit Mode"/>
+                                <Style.Triggers>
+                                    <!-- Active State Styling -->
+                                    <DataTrigger Binding="{Binding IsEditMode}" Value="True">
+                                        <Setter Property="Content" Value="✓ Done Editing"/>
+                                        <Setter Property="Background" Value="#9A3412"/>
+                                        <Setter Property="Foreground" Value="#FFFFFF"/>
+                                        <Setter Property="BorderBrush" Value="#EA580C"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
                     <Button Content="⚙ Settings" Command="{Binding NavigateSettingsCommand}" 
-                            Style="{StaticResource SubtleBottomTabButtonStyle}"/>
+            Style="{StaticResource SubtleBottomTabButtonStyle}"/>
                 </StackPanel>
             </Grid>
         </Grid>
