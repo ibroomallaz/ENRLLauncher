@@ -54,15 +54,20 @@ public class HomeViewModel : ObservableObject
         }
     }
 
+    // Commands
     public ICommand LaunchItemCommand { get; }
     public ICommand AddDroppedFileCommand { get; }
     public ICommand RemoveItemCommand { get; }
     public ICommand OpenFilePickerCommand { get; }
+    public ICommand AddHorizontalSeparatorCommand { get; }
+    public ICommand AddLongVerticalSeparatorCommand { get; }
+    public ICommand AddShortVerticalSeparatorCommand { get; }
 
+    //Ctor
     public HomeViewModel(
-        ILauncherService launcherService,
-        IFileDialogService fileDialogService,
-        IAppLogger? logger = null)
+    ILauncherService launcherService,
+    IFileDialogService fileDialogService,
+    IAppLogger? logger = null)
     {
         _launcherService = launcherService ?? throw new ArgumentNullException(nameof(launcherService));
         _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
@@ -99,6 +104,16 @@ public class HomeViewModel : ObservableObject
         });
 
         OpenFilePickerCommand = new RelayCommand(_ => OpenFilePicker());
+
+        // Separator Insertion Commands
+        AddHorizontalSeparatorCommand = new RelayCommand(_ =>
+            AddSeparator(LaunchTargetType.HorizontalSeparator, "Section Break"));
+
+        AddLongVerticalSeparatorCommand = new RelayCommand(_ =>
+            AddSeparator(LaunchTargetType.LongVerticalSeparator, "Full Vertical"));
+
+        AddShortVerticalSeparatorCommand = new RelayCommand(_ =>
+            AddSeparator(LaunchTargetType.ShortVerticalSeparator, "Divider"));
     }
 
     private void OpenFilePicker()
@@ -157,10 +172,29 @@ public class HomeViewModel : ObservableObject
             SortOrder = Items.Count + 1
         });
     }
+    private void AddSeparator(LaunchTargetType type, string defaultTitle)
+    {
+        var item = new LaunchItem
+        {
+            Title = defaultTitle,
+            TargetType = type,
+            SortOrder = Items.Count + 1
+        };
+
+        Items.Add(item);
+        UpdateSortOrders();
+    }
 
     private async Task LaunchAsync(LaunchItem item)
     {
         if (IsEditMode || item == null) return;
+        // Ignore clicks on any separator type
+        if (item.TargetType is LaunchTargetType.HorizontalSeparator
+                            or LaunchTargetType.LongVerticalSeparator
+                            or LaunchTargetType.ShortVerticalSeparator)
+        {
+            return;
+        }
 
         StatusMessage = $"Launching {item.Title}...";
         bool success = await _launcherService.LaunchAsync(item);

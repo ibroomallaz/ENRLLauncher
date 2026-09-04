@@ -56,15 +56,16 @@ public partial class HomeView : UserControl
     {
         if (DataContext is not HomeViewModel { IsEditMode: true }) return;
 
+        // Do not initiate drag if user clicked a button (delete) or textbox (title editing)
+        if (e.OriginalSource is DependencyObject dep)
+        {
+            if (FindParent<Button>(dep) != null || FindParent<TextBox>(dep) != null)
+                return;
+        }
+
         var cardBorder = FindCardBorder(e.OriginalSource as DependencyObject);
         if (cardBorder?.DataContext is LaunchItem item)
         {
-            // Do not initiate drag if user clicked directly on the delete button
-            if (e.OriginalSource is DependencyObject dep && FindParent<Button>(dep)?.Content?.ToString() == "✕")
-            {
-                return;
-            }
-
             _dragStartPoint = e.GetPosition(this);
             _draggedCard = cardBorder;
             _draggedItem = item;
@@ -90,7 +91,9 @@ public partial class HomeView : UserControl
                 _adornerLayer = AdornerLayer.GetAdornerLayer(this);
                 if (_adornerLayer != null)
                 {
-                    _dragAdorner = new WireframeDragAdorner(this, new Size(215, 150));
+                    var adornerWidth = _draggedCard.ActualWidth > 0 ? _draggedCard.ActualWidth : 215;
+                    var adornerHeight = _draggedCard.ActualHeight > 0 ? _draggedCard.ActualHeight : 150;
+                    _dragAdorner = new WireframeDragAdorner(this, new Size(adornerWidth, adornerHeight));
                     _adornerLayer.Add(_dragAdorner);
                 }
 
