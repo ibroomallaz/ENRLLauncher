@@ -19,9 +19,9 @@ namespace ENRLLauncher.MVVM.Model
         public const string g_SettingsFileName = "settings.json";
         public static readonly string g_SettingsPath = Path.Combine(g_AppDir, g_SettingsFileName);
 
-        // Backup/cache files (local)
-        public static readonly string g_DepartmentCachePath = Path.Combine(g_DataDir, "departments.json");
-        public static readonly string g_LinksCachePath = Path.Combine(g_DataDir, "links.json");
+        // Layout persistence file (local)
+        public const string g_LayoutFileName = "layout.json";
+        public static readonly string g_LayoutPath = Path.Combine(g_AppDir, g_LayoutFileName);
 
         // Logs + legacy settings dirs
         public static readonly string g_LogsDir = Path.Combine(g_AppDir, "logs");
@@ -30,5 +30,6 @@ namespace ENRLLauncher.MVVM.Model
         // Schema versions
         public const int g_SettingsSchema = 1;
         public const int g_VersionSchema = 1;
+        public const int g_LayoutSchema = 1;
     }
 }

@@ -14,6 +14,7 @@ public class HomeViewModel : ObservableObject
 {
     private readonly ILauncherService _launcherService;
     private readonly IFileDialogService _fileDialogService;
+    private readonly ILayoutService _layoutService;
     private readonly IAppLogger? _logger;
 
     private bool _isEditMode;
@@ -21,8 +22,7 @@ public class HomeViewModel : ObservableObject
 
     public ObservableCollection<LaunchItem> Items { get; } = [];
 
-    // Visible only during Edit Mode, or if no cards exist yet (empty state)
-    public bool IsDropCardVisible => IsEditMode || Items.Count == 0;
+    public static bool IsDropCardVisible => true;
 
     public bool IsEditMode
     {
@@ -33,10 +33,15 @@ public class HomeViewModel : ObservableObject
             {
                 _isEditMode = value;
                 OnPropertyChanged();
-                OnPropertyChanged(nameof(IsDropCardVisible));
                 StatusMessage = _isEditMode
                     ? "✏ Edit Mode Active — Drag cards to swap positions, click ✕ to delete"
                     : "All systems ready";
+
+                // Persist changes (such as inline row break title edits) when exiting edit mode
+                if (!_isEditMode)
+                {
+                    _ = SaveCurrentLayoutAsync();
+                }
             }
         }
     }
@@ -54,7 +59,6 @@ public class HomeViewModel : ObservableObject
         }
     }
 
-    // Commands
     public ICommand LaunchItemCommand { get; }
     public ICommand AddDroppedFileCommand { get; }
     public ICommand RemoveItemCommand { get; }
@@ -63,75 +67,71 @@ public class HomeViewModel : ObservableObject
     public ICommand AddLongVerticalSeparatorCommand { get; }
     public ICommand AddShortVerticalSeparatorCommand { get; }
 
-    //Ctor
     public HomeViewModel(
-    ILauncherService launcherService,
-    IFileDialogService fileDialogService,
-    IAppLogger? logger = null)
+        ILauncherService launcherService,
+        IFileDialogService fileDialogService,
+        ILayoutService layoutService,
+        IAppLogger? logger = null)
     {
         _launcherService = launcherService ?? throw new ArgumentNullException(nameof(launcherService));
         _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
+        _layoutService = layoutService ?? throw new ArgumentNullException(nameof(layoutService));
         _logger = logger;
 
-        Items.CollectionChanged += (s, e) =>
-        {
-            OnPropertyChanged(nameof(IsDropCardVisible));
-        };
+        Items.CollectionChanged += (s, e) => OnPropertyChanged(nameof(IsDropCardVisible));
 
         LaunchItemCommand = new RelayCommand(async param =>
         {
-            if (param is LaunchItem item)
-            {
-                await LaunchAsync(item);
-            }
+            if (param is LaunchItem item) await LaunchAsync(item);
         });
 
         AddDroppedFileCommand = new RelayCommand(param =>
         {
-            if (param is string filePath)
-            {
-                AddDroppedFile(filePath);
-            }
+            if (param is string filePath) AddDroppedFile(filePath);
         });
 
-        RemoveItemCommand = new RelayCommand(param =>
+        RemoveItemCommand = new RelayCommand(async param =>
         {
             if (param is LaunchItem item && Items.Contains(item))
             {
                 Items.Remove(item);
                 UpdateSortOrders();
+                await SaveCurrentLayoutAsync();
+                _logger?.Log(AppLogLevel.Info, $"Removed item: {item.Title}");
             }
         });
 
         OpenFilePickerCommand = new RelayCommand(_ => OpenFilePicker());
 
-        // Separator Insertion Commands
-        AddHorizontalSeparatorCommand = new RelayCommand(_ =>
-            AddSeparator(LaunchTargetType.HorizontalSeparator, "Section Break"));
+        AddHorizontalSeparatorCommand = new RelayCommand(async _ =>
+            await AddSeparatorAsync(LaunchTargetType.HorizontalSeparator, "Section Break"));
 
-        AddLongVerticalSeparatorCommand = new RelayCommand(_ =>
-            AddSeparator(LaunchTargetType.LongVerticalSeparator, "Full Vertical"));
+        AddLongVerticalSeparatorCommand = new RelayCommand(async _ =>
+            await AddSeparatorAsync(LaunchTargetType.LongVerticalSeparator, "Long Vertical"));
 
-        AddShortVerticalSeparatorCommand = new RelayCommand(_ =>
-            AddSeparator(LaunchTargetType.ShortVerticalSeparator, "Divider"));
+        AddShortVerticalSeparatorCommand = new RelayCommand(async _ =>
+            await AddSeparatorAsync(LaunchTargetType.ShortVerticalSeparator, "Short Vertical"));
+
+        // Load saved canvas layout from local appdata on startup
+        _ = LoadInitialLayoutAsync();
     }
 
-    private void OpenFilePicker()
+    public async Task LoadInitialLayoutAsync()
     {
-        const string filter = "All Supported Files|*.pptx;*.ppt;*.ppsx;*.pps;*.pptm;*.exe;*.bat;*.cmd;*.ps1;*.pdf;*.docx;*.xlsx;*.txt|" +
-                              "Presentations (*.pptx;*.ppt;*.ppsx)|*.pptx;*.ppt;*.ppsx;*.pps;*.pptm|" +
-                              "Applications (*.exe;*.bat;*.cmd)|*.exe;*.bat;*.cmd;*.ps1|" +
-                              "Documents (*.pdf;*.docx;*.xlsx)|*.pdf;*.docx;*.xlsx;*.txt|" +
-                              "All Files (*.*)|*.*";
+        var savedItems = await _layoutService.LoadLayoutAsync();
+        Items.Clear();
 
-        var selectedFiles = _fileDialogService.OpenFiles("Select Files or Presentations to Add", filter);
-        if (selectedFiles != null)
+        foreach (var item in savedItems)
         {
-            foreach (var file in selectedFiles)
-            {
-                AddDroppedFile(file);
-            }
+            Items.Add(item);
         }
+
+        UpdateSortOrders();
+    }
+
+    public async Task SaveCurrentLayoutAsync()
+    {
+        await _layoutService.SaveLayoutAsync(Items);
     }
 
     public void Reorder(int oldIndex, int newIndex)
@@ -140,14 +140,7 @@ public class HomeViewModel : ObservableObject
         {
             Items.Move(oldIndex, newIndex);
             UpdateSortOrders();
-        }
-    }
-
-    private void UpdateSortOrders()
-    {
-        for (int i = 0; i < Items.Count; i++)
-        {
-            Items[i].SortOrder = i + 1;
+            _ = SaveCurrentLayoutAsync();
         }
     }
 
@@ -163,32 +156,58 @@ public class HomeViewModel : ObservableObject
             _ => LaunchTargetType.Document
         };
 
-        Items.Add(new LaunchItem
+        var newItem = new LaunchItem
         {
             Title = Path.GetFileNameWithoutExtension(filePath),
             Description = ext.TrimStart('.').ToUpperInvariant(),
             TargetPath = filePath,
             TargetType = targetType,
             SortOrder = Items.Count + 1
-        });
+        };
+
+        Items.Add(newItem);
+        UpdateSortOrders();
+        _ = SaveCurrentLayoutAsync();
+        _logger?.Log(AppLogLevel.Info, $"Added file {filePath} ({targetType})");
     }
-    private void AddSeparator(LaunchTargetType type, string defaultTitle)
+
+    private async Task AddSeparatorAsync(LaunchTargetType type, string defaultTitle)
     {
-        var item = new LaunchItem
+        var separatorItem = new LaunchItem
         {
             Title = defaultTitle,
             TargetType = type,
             SortOrder = Items.Count + 1
         };
 
-        Items.Add(item);
+        Items.Add(separatorItem);
         UpdateSortOrders();
+        await SaveCurrentLayoutAsync();
+        _logger?.Log(AppLogLevel.Info, $"Added separator {type}");
+    }
+
+    private void OpenFilePicker()
+    {
+        const string filter = "All Supported Files|*.pptx;*.ppt;*.ppsx;*.pps;*.pptm;*.exe;*.bat;*.cmd;*.ps1;*.pdf;*.docx;*.xlsx;*.txt|" +
+                              "Presentations (*.pptx;*.ppt;*.ppsx)|*.pptx;*.ppt;*.ppsx;*.pps;*.pptm|" +
+                              "Applications (*.exe;*.bat;*.cmd)|*.exe;*.bat;*.cmd;*.ps1|" +
+                              "Documents (*.pdf;*.docx;*.xlsx)|*.pdf;*.docx;*.xlsx;*.txt|" +
+                              "All Files (*.*)|*.*";
+
+        var selectedFiles = _fileDialogService.OpenFiles("Select Items to Add", filter);
+        if (selectedFiles != null)
+        {
+            foreach (var file in selectedFiles)
+            {
+                AddDroppedFile(file);
+            }
+        }
     }
 
     private async Task LaunchAsync(LaunchItem item)
     {
         if (IsEditMode || item == null) return;
-        // Ignore clicks on any separator type
+
         if (item.TargetType is LaunchTargetType.HorizontalSeparator
                             or LaunchTargetType.LongVerticalSeparator
                             or LaunchTargetType.ShortVerticalSeparator)
@@ -199,5 +218,13 @@ public class HomeViewModel : ObservableObject
         StatusMessage = $"Launching {item.Title}...";
         bool success = await _launcherService.LaunchAsync(item);
         StatusMessage = success ? "All systems ready" : $"Failed to launch {item.Title}";
+    }
+
+    private void UpdateSortOrders()
+    {
+        for (int i = 0; i < Items.Count; i++)
+        {
+            Items[i].SortOrder = i + 1;
+        }
     }
 }

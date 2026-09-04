@@ -147,7 +147,7 @@ namespace ENRLLauncher.Core.Logging
             }
             catch
             {
-                var temp = Path.Combine(Path.GetTempPath(), "UArizona", "DesktopSupportApp", "logs");
+                var temp = Path.Combine(Path.GetTempPath(), "UArizona", "ENRLLauncher", "logs");
                 System.IO.Directory.CreateDirectory(temp);
                 return temp;
             }

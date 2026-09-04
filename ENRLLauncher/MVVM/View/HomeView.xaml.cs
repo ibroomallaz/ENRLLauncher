@@ -148,10 +148,7 @@ public partial class HomeView : UserControl
             {
                 _adornerLayer.Remove(_dragAdorner);
             }
-            if (_draggedCard != null)
-            {
-                _draggedCard.Opacity = 1.0;
-            }
+            _draggedCard?.Opacity = 1.0;
         }
 
         ClearTargetHighlight();
