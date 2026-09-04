@@ -27,17 +27,39 @@ public class JsonStorageService : IJsonStorageService
     {
         if (!File.Exists(filePath))
         {
+            // Try fallback to .bak if primary is missing
+            var fallbackPath = $"{filePath}.bak";
+            if (File.Exists(fallbackPath))
+            {
+                return await TryReadFileAsync<T>(fallbackPath);
+            }
             return null;
         }
 
+        var result = await TryReadFileAsync<T>(filePath);
+        if (result != null) return result;
+
+        // Primary failed/corrupt: archive it and try .bak
+        ArchiveCorruptFile(filePath);
+
+        var backup = $"{filePath}.bak";
+        if (File.Exists(backup))
+        {
+            return await TryReadFileAsync<T>(backup);
+        }
+
+        return null;
+    }
+
+    private async Task<T?> TryReadFileAsync<T>(string path) where T : class
+    {
         try
         {
-            var json = await File.ReadAllTextAsync(filePath);
+            var json = await File.ReadAllTextAsync(path);
             return JsonConvert.DeserializeObject<T>(json, _serializerSettings);
         }
-        catch (Exception)
+        catch
         {
-            ArchiveCorruptFile(filePath);
             return null;
         }
     }

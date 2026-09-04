@@ -14,10 +14,13 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
+        // Instantiate storage and domain layout dependencies
+        var storageService = new JsonStorageService();
+        var layoutService = new LayoutService(storageService);
         var launcherService = new LauncherService();
         var fileDialogService = new FileDialogService();
 
-        var homeVM = new HomeViewModel(launcherService, fileDialogService);
+        var homeVM = new HomeViewModel(launcherService, fileDialogService, layoutService);
         var settingsVM = new SettingsViewModel();
 
         DataContext = new MainWindowViewModel(homeVM, settingsVM);

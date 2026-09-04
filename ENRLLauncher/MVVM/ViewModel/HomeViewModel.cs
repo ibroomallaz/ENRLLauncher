@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using ENRLLauncher.Core.Enums;
 using ENRLLauncher.Core.Interfaces;
@@ -19,10 +17,17 @@ public class HomeViewModel : ObservableObject
 
     private bool _isEditMode;
     private string _statusMessage = "All systems ready";
+    private CancellationTokenSource? _saveDebounceCts;
 
     public ObservableCollection<LaunchItem> Items { get; } = [];
 
-    public static bool IsDropCardVisible => true;
+    // Visible in Edit Mode, or during onboarding when 1 or fewer launch options exist
+    public bool IsDropCardVisible => IsEditMode || LaunchableCount <= 1;
+
+    private int LaunchableCount => Items.Count(i =>
+        i.TargetType is not (LaunchTargetType.HorizontalSeparator
+                          or LaunchTargetType.LongVerticalSeparator
+                          or LaunchTargetType.ShortVerticalSeparator));
 
     public bool IsEditMode
     {
@@ -33,11 +38,12 @@ public class HomeViewModel : ObservableObject
             {
                 _isEditMode = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(IsDropCardVisible));
                 StatusMessage = _isEditMode
                     ? "✏ Edit Mode Active — Drag cards to swap positions, click ✕ to delete"
                     : "All systems ready";
 
-                // Persist changes (such as inline row break title edits) when exiting edit mode
+                // Immediate non-debounced flush on edit mode exit
                 if (!_isEditMode)
                 {
                     _ = SaveCurrentLayoutAsync();
@@ -90,29 +96,28 @@ public class HomeViewModel : ObservableObject
             if (param is string filePath) AddDroppedFile(filePath);
         });
 
-        RemoveItemCommand = new RelayCommand(async param =>
+        RemoveItemCommand = new RelayCommand(param =>
         {
             if (param is LaunchItem item && Items.Contains(item))
             {
                 Items.Remove(item);
                 UpdateSortOrders();
-                await SaveCurrentLayoutAsync();
-                _logger?.Log(AppLogLevel.Info, $"Removed item: {item.Title}");
+                RequestLayoutSave();
+                _logger?.Info(nameof(HomeViewModel), $"Removed item: {item.Title}");
             }
         });
 
         OpenFilePickerCommand = new RelayCommand(_ => OpenFilePicker());
 
-        AddHorizontalSeparatorCommand = new RelayCommand(async _ =>
-            await AddSeparatorAsync(LaunchTargetType.HorizontalSeparator, "Section Break"));
+        AddHorizontalSeparatorCommand = new RelayCommand(_ =>
+            AddSeparator(LaunchTargetType.HorizontalSeparator, "Section Break"));
 
-        AddLongVerticalSeparatorCommand = new RelayCommand(async _ =>
-            await AddSeparatorAsync(LaunchTargetType.LongVerticalSeparator, "Long Vertical"));
+        AddLongVerticalSeparatorCommand = new RelayCommand(_ =>
+            AddSeparator(LaunchTargetType.LongVerticalSeparator, "Long Vertical"));
 
-        AddShortVerticalSeparatorCommand = new RelayCommand(async _ =>
-            await AddSeparatorAsync(LaunchTargetType.ShortVerticalSeparator, "Short Vertical"));
+        AddShortVerticalSeparatorCommand = new RelayCommand(_ =>
+            AddSeparator(LaunchTargetType.ShortVerticalSeparator, "Short Vertical"));
 
-        // Load saved canvas layout from local appdata on startup
         _ = LoadInitialLayoutAsync();
     }
 
@@ -127,11 +132,32 @@ public class HomeViewModel : ObservableObject
         }
 
         UpdateSortOrders();
+        OnPropertyChanged(nameof(IsDropCardVisible));
     }
 
     public async Task SaveCurrentLayoutAsync()
     {
         await _layoutService.SaveLayoutAsync(Items);
+    }
+
+    public void RequestLayoutSave()
+    {
+        _saveDebounceCts?.Cancel();
+        _saveDebounceCts = new CancellationTokenSource();
+        var token = _saveDebounceCts.Token;
+
+        Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(400, token);
+                if (!token.IsCancellationRequested)
+                {
+                    await SaveCurrentLayoutAsync();
+                }
+            }
+            catch (OperationCanceledException) { }
+        });
     }
 
     public void Reorder(int oldIndex, int newIndex)
@@ -140,7 +166,7 @@ public class HomeViewModel : ObservableObject
         {
             Items.Move(oldIndex, newIndex);
             UpdateSortOrders();
-            _ = SaveCurrentLayoutAsync();
+            RequestLayoutSave();
         }
     }
 
@@ -167,11 +193,11 @@ public class HomeViewModel : ObservableObject
 
         Items.Add(newItem);
         UpdateSortOrders();
-        _ = SaveCurrentLayoutAsync();
-        _logger?.Log(AppLogLevel.Info, $"Added file {filePath} ({targetType})");
+        RequestLayoutSave();
+        _logger?.Info(nameof(HomeViewModel), $"Added file {filePath} ({targetType})");
     }
 
-    private async Task AddSeparatorAsync(LaunchTargetType type, string defaultTitle)
+    private void AddSeparator(LaunchTargetType type, string defaultTitle)
     {
         var separatorItem = new LaunchItem
         {
@@ -182,8 +208,8 @@ public class HomeViewModel : ObservableObject
 
         Items.Add(separatorItem);
         UpdateSortOrders();
-        await SaveCurrentLayoutAsync();
-        _logger?.Log(AppLogLevel.Info, $"Added separator {type}");
+        RequestLayoutSave();
+        _logger?.Info(nameof(HomeViewModel), $"Added separator {type}");
     }
 
     private void OpenFilePicker()

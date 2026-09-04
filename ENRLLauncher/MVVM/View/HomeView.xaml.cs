@@ -15,18 +15,18 @@ public partial class HomeView : UserControl
 {
     private Point _dragStartPoint;
     private bool _isDragging;
-    private FrameworkElement? _draggedCard;
+    private Border? _draggedCard;
     private LaunchItem? _draggedItem;
-    private WireframeDragAdorner? _dragAdorner;
-    private AdornerLayer? _adornerLayer;
     private Border? _hoveredTargetBorder;
+    private AdornerLayer? _adornerLayer;
+    private WireframeDragAdorner? _dragAdorner;
 
     public HomeView()
     {
         InitializeComponent();
     }
 
-    // --- External File Drop from Explorer ---
+    // --- External Windows Explorer File Drop ---
 
     private void DropZone_DragOver(object sender, DragEventArgs e)
     {
@@ -50,13 +50,13 @@ public partial class HomeView : UserControl
         }
     }
 
-    // --- Internal Card Dragging via Mouse Capture ---
+    // --- Internal Card & Separator Drag Reordering ---
 
     private void HomeView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (DataContext is not HomeViewModel { IsEditMode: true }) return;
 
-        // Do not initiate drag if user clicked a button (delete) or textbox (title editing)
+        // Prevent dragging when clicking buttons (e.g. Delete) or editing text in section headers
         if (e.OriginalSource is DependencyObject dep)
         {
             if (FindParent<Button>(dep) != null || FindParent<TextBox>(dep) != null)
@@ -91,9 +91,8 @@ public partial class HomeView : UserControl
                 _adornerLayer = AdornerLayer.GetAdornerLayer(this);
                 if (_adornerLayer != null)
                 {
-                    var adornerWidth = _draggedCard.ActualWidth > 0 ? _draggedCard.ActualWidth : 215;
-                    var adornerHeight = _draggedCard.ActualHeight > 0 ? _draggedCard.ActualHeight : 150;
-                    _dragAdorner = new WireframeDragAdorner(this, new Size(adornerWidth, adornerHeight));
+                    var adornerSize = new Size(_draggedCard.ActualWidth, _draggedCard.ActualHeight);
+                    _dragAdorner = new WireframeDragAdorner(this, adornerSize);
                     _adornerLayer.Add(_dragAdorner);
                 }
 
@@ -129,7 +128,7 @@ public partial class HomeView : UserControl
             {
                 int oldIdx = vm.Items.IndexOf(_draggedItem);
                 int newIdx = vm.Items.IndexOf(targetItem);
-                if (oldIdx != newIdx)
+                if (oldIdx != -1 && newIdx != -1 && oldIdx != newIdx)
                 {
                     vm.Reorder(oldIdx, newIdx);
                 }
@@ -158,7 +157,17 @@ public partial class HomeView : UserControl
         _dragAdorner = null;
     }
 
-    // --- Helpers ---
+    // --- Inline Title Edit Persistence ---
+
+    private void SectionTitle_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is HomeViewModel vm)
+        {
+            _ = vm.SaveCurrentLayoutAsync();
+        }
+    }
+
+    // --- Visual Tree & Hit Testing Helpers ---
 
     private Border? FindCardBorder(DependencyObject? element)
     {
@@ -192,14 +201,13 @@ public partial class HomeView : UserControl
     {
         _hoveredTargetBorder = border;
         border.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F97316"));
-        border.BorderThickness = new Thickness(3.5);
-        border.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1E293B"));
+        border.BorderThickness = new Thickness(2.5);
         border.Effect = new DropShadowEffect
         {
             Color = (Color)ColorConverter.ConvertFromString("#EA580C"),
-            BlurRadius = 16,
+            BlurRadius = 14,
             ShadowDepth = 0,
-            Opacity = 0.7
+            Opacity = 0.65
         };
     }
 
@@ -209,7 +217,6 @@ public partial class HomeView : UserControl
         {
             _hoveredTargetBorder.ClearValue(Border.BorderBrushProperty);
             _hoveredTargetBorder.ClearValue(Border.BorderThicknessProperty);
-            _hoveredTargetBorder.ClearValue(Border.BackgroundProperty);
             _hoveredTargetBorder.ClearValue(UIElement.EffectProperty);
             _hoveredTargetBorder = null;
         }

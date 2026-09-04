@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:enums="clr-namespace:ENRLLauncher.Core.Enums"
+             xmlns:controls="clr-namespace:ENRLLauncher.MVVM.View.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="550" d:DesignWidth="1100"
              PreviewMouseLeftButtonDown="HomeView_PreviewMouseLeftButtonDown"
@@ -12,6 +13,108 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- 1. Reusable Edit Mode Toolbar Pill Button -->
+        <Style x:Key="EditModeToolbarButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#1E293B"/>
+            <Setter Property="Foreground" Value="#F8FAFC"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,3"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="8" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#334155"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 2. Reusable Circular Delete Badge -->
+        <Style x:Key="CardDeleteButtonStyle" TargetType="Button">
+            <Setter Property="Content" Value="✕"/>
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Background" Value="#EF4444"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Visibility" Value="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}"/>
+            <Setter Property="Command" Value="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            <Setter Property="CommandParameter" Value="{Binding}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="10">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#DC2626"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 3. Launch Card Outer Border Style -->
+        <Style x:Key="LaunchCardBorderStyle" TargetType="Border">
+            <Setter Property="Width" Value="215"/>
+            <Setter Property="Height" Value="150"/>
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Background" Value="{DynamicResource Brush.Surface.Primary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                    <Setter Property="BorderBrush" Value="#475569"/>
+                    <Setter Property="Background" Value="#142136"/>
+                    <Setter Property="Cursor" Value="SizeAll"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 4. Launch Card Click Button Style -->
+        <Style x:Key="CardLaunchButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Command" Value="{Binding DataContext.LaunchItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            <Setter Property="CommandParameter" Value="{Binding}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                    <Setter Property="Cursor" Value="SizeAll"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 5. Explorer Drop Target Border Style -->
+        <Style x:Key="DropZoneCardBorderStyle" TargetType="Border">
+            <Setter Property="Width" Value="215"/>
+            <Setter Property="Height" Value="150"/>
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Background" Value="{DynamicResource Brush.Surface.Secondary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Light}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="0,4,0,0">
@@ -43,48 +146,31 @@
                 <!-- Full Horizontal Row Break -->
                 <Button Content="+ Row Break" 
                         Command="{Binding AddHorizontalSeparatorCommand}"
-                        Background="#1E293B" Foreground="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1"
-                        Padding="10,3" Margin="0,0,6,0" Cursor="Hand">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="8"/>
-                        </Style>
-                    </Button.Resources>
-                </Button>
+                        Style="{StaticResource EditModeToolbarButtonStyle}"
+                        Margin="0,0,6,0"/>
 
                 <!-- Long Vertical Divider -->
                 <Button Content="+ Long Vertical" 
                         Command="{Binding AddLongVerticalSeparatorCommand}"
-                        Background="#1E293B" Foreground="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1"
-                        Padding="10,3" Margin="0,0,6,0" Cursor="Hand">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="8"/>
-                        </Style>
-                    </Button.Resources>
-                </Button>
+                        Style="{StaticResource EditModeToolbarButtonStyle}"
+                        Margin="0,0,6,0"/>
 
                 <!-- Short Vertical Divider -->
                 <Button Content="+ Short Vertical" 
                         Command="{Binding AddShortVerticalSeparatorCommand}"
-                        Background="#1E293B" Foreground="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1"
-                        Padding="10,3" Cursor="Hand">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="8"/>
-                        </Style>
-                    </Button.Resources>
-                </Button>
+                        Style="{StaticResource EditModeToolbarButtonStyle}"/>
             </StackPanel>
         </Border>
 
         <!-- 2. WORKSPACE GRID -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <WrapPanel x:Name="MainWrapPanel" HorizontalAlignment="Center" Orientation="Horizontal" MaxWidth="1200">
-                <ItemsControl ItemsSource="{Binding Items}">
+            <StackPanel HorizontalAlignment="Stretch" Margin="0,0,0,20">
+
+                <!-- Dynamic Centered Launch Cards & In-Grid Separators -->
+                <ItemsControl ItemsSource="{Binding Items}" HorizontalAlignment="Stretch">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <WrapPanel />
+                            <controls:CenteredWrapPanel />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
 
@@ -94,37 +180,9 @@
                                 <!-- A. STANDARD LAUNCH CARD -->
                                 <Border x:Name="CardTile" 
                                         Tag="CardBorder"
-                                        Width="215" Height="150" Margin="10" 
-                                        CornerRadius="10" Padding="12">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="{DynamicResource Brush.Surface.Primary}"/>
-                                            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
-                                            <Setter Property="BorderThickness" Value="1.5"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
-                                                    <Setter Property="BorderBrush" Value="#475569"/>
-                                                    <Setter Property="Background" Value="#142136"/>
-                                                    <Setter Property="Cursor" Value="SizeAll"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-
+                                        Style="{StaticResource LaunchCardBorderStyle}">
                                     <Grid>
-                                        <Button Background="Transparent" BorderThickness="0"
-                                                Command="{Binding DataContext.LaunchItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}">
-                                            <Button.Style>
-                                                <Style TargetType="Button">
-                                                    <Setter Property="Cursor" Value="Hand"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
-                                                            <Setter Property="Cursor" Value="SizeAll"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
+                                        <Button Style="{StaticResource CardLaunchButtonStyle}">
                                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <Border Background="{DynamicResource Brush.Surface.Tertiary}" CornerRadius="4" Padding="8,3" Margin="0,0,0,8" HorizontalAlignment="Center">
                                                     <TextBlock Text="{Binding TargetType}" Foreground="{DynamicResource Brush.UA.Oasis}" FontWeight="Bold" FontSize="11"/>
@@ -134,20 +192,10 @@
                                             </StackPanel>
                                         </Button>
 
-                                        <!-- Delete Button -->
-                                        <Button Content="✕" 
-                                                Visibility="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}"
-                                                Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}"
+                                        <!-- Delete Badge Overlay -->
+                                        <Button Style="{StaticResource CardDeleteButtonStyle}"
                                                 HorizontalAlignment="Right" VerticalAlignment="Top" 
-                                                Background="#EF4444" Foreground="#FFFFFF" 
-                                                FontWeight="Bold" FontSize="10" Width="22" Height="22" BorderThickness="0" Cursor="Hand" Margin="0,-4,-4,0">
-                                            <Button.Resources>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="CornerRadius" Value="11"/>
-                                                </Style>
-                                            </Button.Resources>
-                                        </Button>
+                                                Margin="0,-4,-4,0"/>
                                     </Grid>
                                 </Border>
 
@@ -196,6 +244,7 @@
 
                                             <!-- Edit Mode Input Box -->
                                             <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
+                                                     LostFocus="SectionTitle_LostFocus"
                                                      Foreground="{DynamicResource Brush.Text.Primary}"
                                                      Background="#1E293B"
                                                      BorderBrush="{DynamicResource Brush.UA.Sky}"
@@ -224,24 +273,8 @@
                                             </TextBox>
 
                                             <!-- Delete Badge -->
-                                            <Button Content="✕" 
-                                                    Visibility="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}"
-                                                    Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    CommandParameter="{Binding}"
-                                                    Background="#EF4444" 
-                                                    Foreground="#FFFFFF" 
-                                                    FontWeight="Bold" 
-                                                    FontSize="10" 
-                                                    Width="20" Height="20" 
-                                                    BorderThickness="0" 
-                                                    Cursor="Hand" 
-                                                    Margin="8,0,0,0">
-                                                <Button.Resources>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="CornerRadius" Value="10"/>
-                                                    </Style>
-                                                </Button.Resources>
-                                            </Button>
+                                            <Button Style="{StaticResource CardDeleteButtonStyle}"
+                                                    Margin="8,0,0,0"/>
                                         </StackPanel>
 
                                         <!-- Right Symmetrical Line -->
@@ -259,19 +292,9 @@
                                     <Grid HorizontalAlignment="Center">
                                         <Rectangle Style="{DynamicResource LongVerticalSeparator}" Height="120" VerticalAlignment="Center"/>
 
-                                        <Button Content="✕" 
-                                                Visibility="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}"
-                                                Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}"
+                                        <Button Style="{StaticResource CardDeleteButtonStyle}"
                                                 HorizontalAlignment="Center" VerticalAlignment="Top" 
-                                                Background="#EF4444" Foreground="#FFFFFF" 
-                                                FontWeight="Bold" FontSize="10" Width="20" Height="20" BorderThickness="0" Cursor="Hand" Margin="0,4,0,0">
-                                            <Button.Resources>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="CornerRadius" Value="10"/>
-                                                </Style>
-                                            </Button.Resources>
-                                        </Button>
+                                                Margin="0,4,0,0"/>
                                     </Grid>
                                 </Border>
 
@@ -285,19 +308,9 @@
                                     <Grid HorizontalAlignment="Center">
                                         <Rectangle Style="{DynamicResource ShortVerticalSeparator}"/>
 
-                                        <Button Content="✕" 
-                                                Visibility="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}"
-                                                Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}"
+                                        <Button Style="{StaticResource CardDeleteButtonStyle}"
                                                 HorizontalAlignment="Center" VerticalAlignment="Top" 
-                                                Background="#EF4444" Foreground="#FFFFFF" 
-                                                FontWeight="Bold" FontSize="10" Width="20" Height="20" BorderThickness="0" Cursor="Hand" Margin="0,4,0,0">
-                                            <Button.Resources>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="CornerRadius" Value="10"/>
-                                                </Style>
-                                            </Button.Resources>
-                                        </Button>
+                                                Margin="0,4,0,0"/>
                                     </Grid>
                                 </Border>
                             </Grid>
@@ -322,11 +335,8 @@
                 </ItemsControl>
 
                 <!-- 3. EXPLORER DROP / FILE PICKER TILE -->
-                <Border Width="215" Height="150" Margin="10" 
-                        CornerRadius="10" 
-                        Background="{DynamicResource Brush.Surface.Secondary}"
-                        BorderBrush="{DynamicResource Brush.Border.Light}"
-                        BorderThickness="2"
+                <Border Style="{StaticResource DropZoneCardBorderStyle}"
+                        HorizontalAlignment="Center"
                         AllowDrop="True" 
                         Drop="DropZone_Drop" 
                         DragOver="DropZone_DragOver"
@@ -338,7 +348,7 @@
                         </StackPanel>
                     </Button>
                 </Border>
-            </WrapPanel>
+            </StackPanel>
         </ScrollViewer>
     </Grid>
 </UserControl>
