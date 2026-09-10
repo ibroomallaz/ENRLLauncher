@@ -15,7 +15,6 @@ public class LaunchItemFactory
         {
             ".pptx" or ".ppt" or ".ppsx" or ".pps" or ".pptm" => LaunchTargetType.Presentation,
             ".exe" or ".bat" or ".cmd" or ".ps1" => LaunchTargetType.Application,
-            ".pdf" or ".docx" or ".xlsx" or ".txt" => LaunchTargetType.Document,
             _ => LaunchTargetType.Document
         };
 

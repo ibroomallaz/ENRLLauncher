@@ -5,7 +5,7 @@ using ENRLLauncher.MVVM.ViewModel;
 
 namespace ENRLLauncher;
 
-public partial class MainWindow : Window
+public partial class MainWindow
 {
     private bool _isFullScreen;
     private Rect _restoreBounds;

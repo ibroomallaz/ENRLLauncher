@@ -1,5 +1,4 @@
-﻿using System;
-using ENRLLauncher.Core.Enums;
+﻿using ENRLLauncher.Core.Enums;
 
 namespace ENRLLauncher.MVVM.Model;
 

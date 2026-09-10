@@ -8,7 +8,7 @@ namespace ENRLLauncher.Core.Services;
 
 public class LauncherService : ILauncherService
 {
-    public bool CanLaunch(LaunchItem item)
+    public bool CanLaunch(LaunchItem? item)
     {
         if (item == null || !item.IsEnabled || string.IsNullOrWhiteSpace(item.TargetPath))
         {

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ENRLLauncher.MVVM.Model;
+﻿namespace ENRLLauncher.MVVM.Model;
 
 public class AppConfig
 {

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using ENRLLauncher.Core.Interfaces;
+﻿using ENRLLauncher.Core.Interfaces;
 using ENRLLauncher.MVVM.Model;
 using ENRLLauncher.MVVM.Model.Schema;
 

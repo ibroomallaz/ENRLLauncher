@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using ENRLLauncher.Core.Interfaces;
 using ENRLLauncher.Core.Services;
@@ -8,9 +7,9 @@ using ENRLLauncher.MVVM.ViewModel;
 
 namespace ENRLLauncher;
 
-public partial class App : Application
+public partial class App
 {
-    public static IServiceProvider Services { get; private set; } = null!;
+    private static IServiceProvider Services { get; set; } = null!;
 
     public App()
     {

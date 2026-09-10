@@ -18,8 +18,8 @@ public class MainWindowViewModel : ObservableObject
     private bool _isCompactMode;
 
     public string AppVersion => Globals.g_AppVersion;
-    public HomeViewModel HomeVM { get; }
-    public SettingsViewModel SettingsVM { get; }
+    private HomeViewModel HomeVM { get; }
+    private SettingsViewModel SettingsVM { get; }
 
     public object CurrentView
     {
@@ -47,7 +47,7 @@ public class MainWindowViewModel : ObservableObject
         }
     }
 
-    public bool IsEditMode
+    private bool IsEditMode
     {
         get => _isEditMode;
         set
@@ -61,7 +61,7 @@ public class MainWindowViewModel : ObservableObject
         }
     }
 
-    public bool IsCompactMode
+    private bool IsCompactMode
     {
         get => _isCompactMode;
         set

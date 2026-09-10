@@ -121,7 +121,7 @@ public class HomeViewModel : ObservableObject
         _ = LoadInitialLayoutAsync();
     }
 
-    public async Task LoadInitialLayoutAsync()
+    private async Task LoadInitialLayoutAsync()
     {
         var savedItems = await _layoutService.LoadLayoutAsync();
         Items.Clear();
@@ -140,7 +140,7 @@ public class HomeViewModel : ObservableObject
         await _layoutService.SaveLayoutAsync(Items);
     }
 
-    public void RequestLayoutSave()
+    private void RequestLayoutSave()
     {
         _saveDebounceCts?.Cancel();
         _saveDebounceCts = new CancellationTokenSource();
@@ -157,7 +157,7 @@ public class HomeViewModel : ObservableObject
                 }
             }
             catch (OperationCanceledException) { }
-        });
+        }, token);
     }
 
     public void Reorder(int oldIndex, int newIndex)

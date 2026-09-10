@@ -15,7 +15,7 @@ namespace ENRLLauncher.Core.Logging
         private StreamWriter? _writer;
 
         // Cleanup is disabled until settings specify retention.
-        private bool _cleanupEnabled = false;
+        private bool _cleanupEnabled;
 
         // Expose where logs are written.
         public string DirectoryPath => _dir;
@@ -79,7 +79,7 @@ namespace ENRLLauncher.Core.Logging
         }
 
         // Empties today's file in place; keeps handle open.
-        public void TruncateToday()
+        private void TruncateToday()
         {
             lock (_sync)
             {
@@ -92,7 +92,10 @@ namespace ENRLLauncher.Core.Logging
                         fs.Seek(0, SeekOrigin.Begin);
                     }
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
             }
         }
 
@@ -101,16 +104,23 @@ namespace ENRLLauncher.Core.Logging
         {
             try
             {
-                foreach (var f in System.IO.Directory.EnumerateFiles(_dir, "app-*.log"))
+                foreach (var f in Directory.EnumerateFiles(_dir, "app-*.log"))
                 {
                     var d = ParseDate(Path.GetFileNameWithoutExtension(f)); // app-YYYYMMDD
                     if (d.HasValue && d.Value < cutoffUtc.Date)
                     {
-                        try { File.Delete(f); } catch { }
+                        try { File.Delete(f); }
+                        catch
+                        {
+                            // ignored
+                        }
                     }
                 }
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
 
         // Deletes all logs; optionally also clears today's file.
@@ -119,21 +129,33 @@ namespace ENRLLauncher.Core.Logging
             try
             {
                 var today = Path.Combine(_dir, $"app-{_dayUtc:yyyyMMdd}.log");
-                foreach (var f in System.IO.Directory.EnumerateFiles(_dir, "app-*.log"))
+                foreach (var f in Directory.EnumerateFiles(_dir, "app-*.log"))
                 {
                     if (!includeToday && string.Equals(f, today, StringComparison.OrdinalIgnoreCase)) continue;
-                    try { File.Delete(f); } catch { }
+                    try { File.Delete(f); }
+                    catch
+                    {
+                        // ignored
+                    }
                 }
                 if (includeToday) TruncateToday();
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
 
         public void Dispose()
         {
             lock (_sync)
             {
-                try { _writer?.Dispose(); } catch { }
+                try { _writer?.Dispose(); }
+                catch
+                {
+                    // ignored
+                }
+
                 _writer = null;
             }
         }
@@ -142,13 +164,13 @@ namespace ENRLLauncher.Core.Logging
         {
             try
             {
-                System.IO.Directory.CreateDirectory(preferred);
+                Directory.CreateDirectory(preferred);
                 return preferred;
             }
             catch
             {
                 var temp = Path.Combine(Path.GetTempPath(), "UArizona", "ENRLLauncher", "logs");
-                System.IO.Directory.CreateDirectory(temp);
+                Directory.CreateDirectory(temp);
                 return temp;
             }
         }
@@ -160,7 +182,12 @@ namespace ENRLLauncher.Core.Logging
 
         private void ReopenForNewDay_NoThrow()
         {
-            try { _writer?.Dispose(); } catch { }
+            try { _writer?.Dispose(); }
+            catch
+            {
+                // ignored
+            }
+
             try
             {
                 var path = Path.Combine(_dir, $"app-{_dayUtc:yyyyMMdd}.log");
@@ -169,23 +196,34 @@ namespace ENRLLauncher.Core.Logging
                     AutoFlush = true
                 };
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
 
         private void TryCleanupOldFiles()
         {
-            try { TryCleanupOldFiles_NoThrow(); } catch { }
+            try { TryCleanupOldFiles_NoThrow(); }
+            catch
+            {
+                // ignored
+            }
         }
 
         private void TryCleanupOldFiles_NoThrow()
         {
             var cutoff = DateTime.UtcNow.Date.AddDays(-_retentionDays);
-            foreach (var f in System.IO.Directory.EnumerateFiles(_dir, "app-*.log"))
+            foreach (var f in Directory.EnumerateFiles(_dir, "app-*.log"))
             {
                 var d = ParseDate(Path.GetFileNameWithoutExtension(f));
                 if (d.HasValue && d.Value < cutoff)
                 {
-                    try { File.Delete(f); } catch { }
+                    try { File.Delete(f); }
+                    catch
+                    {
+                        // ignored
+                    }
                 }
             }
         }
@@ -213,7 +251,10 @@ namespace ENRLLauncher.Core.Logging
                 var path = Path.Combine(_dir, $"app-{_dayUtc:yyyyMMdd}.log");
                 File.AppendAllText(path, line, Encoding.UTF8);
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
     }
 }
