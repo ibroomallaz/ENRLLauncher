@@ -9,6 +9,11 @@ namespace ENRLLauncher.MVVM.Model
         public static readonly string g_AppVersion = VersionDisplayHelper.GetSemVerDisplay();
         public static string g_FileVersion = VersionDisplayHelper.GetFileVersionDisplay();
 #pragma warning restore CA2211 // Non-constant fields should not be visible
+
+        // Remote Box static JSON locations
+        public const string g_VersionJSON = "https://arizona.box.com/shared/static/placeholder_version.json";
+        public const string g_TestVersionJSON = "https://arizona.box.com/shared/static/placeholder_test_version.json";
+
         // Application data directories (local)
         public static readonly string g_AppDir =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),

@@ -34,6 +34,8 @@ public partial class App
         services.AddSingleton<IAppLogger>(_ => new FileLogger(Globals.g_LogsDir));
 
         // Core Services
+        services.AddSingleton<IHttpService, HttpService>();
+        services.AddSingleton<IUpdaterService, UpdaterService>();
         services.AddSingleton<ILayoutService, LayoutService>();
         services.AddSingleton<ILauncherService, LauncherService>();
         services.AddSingleton<IFileDialogService, FileDialogService>();
@@ -96,6 +98,9 @@ public partial class App
         _logger = Services.GetService<IAppLogger>();
         _logger?.Write(AppLogLevel.Info, "Startup", $"App starting v{Globals.g_AppVersion}");
 
+        // Non-blocking cleanup of previous update temp folders
+        _ = Services.GetRequiredService<IUpdaterService>().CleanupOldUpdatesAsync();
+
         // Brief delay to ensure smooth splash presentation
         await Task.Delay(400);
 
@@ -125,6 +130,11 @@ public partial class App
         if (Services?.GetService<IAppLogger>() is FileLogger fl)
         {
             fl.Dispose();
+        }
+
+        if (Services?.GetService<IHttpService>() is IDisposable http)
+        {
+            http.Dispose();
         }
 
         base.OnExit(e);
