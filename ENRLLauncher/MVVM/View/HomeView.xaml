@@ -100,6 +100,7 @@
             <Setter Property="CommandParameter" Value="{Binding}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                    <Setter Property="IsHitTestVisible" Value="False"/>
                     <Setter Property="Cursor" Value="SizeAll"/>
                 </DataTrigger>
             </Style.Triggers>

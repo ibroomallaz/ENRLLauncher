@@ -11,7 +11,7 @@ using ENRLLauncher.MVVM.ViewModel;
 
 namespace ENRLLauncher.MVVM.View;
 
-public partial class HomeView : UserControl
+public partial class HomeView
 {
     private Point _dragStartPoint;
     private bool _isDragging;
@@ -54,12 +54,16 @@ public partial class HomeView : UserControl
 
     private void HomeView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (DataContext is not HomeViewModel { IsEditMode: true }) return;
+        if (DataContext is not HomeViewModel { IsEditMode: true } vm) return;
 
-        // Prevent dragging when clicking buttons (e.g. Delete) or editing text in section headers
+        // Prevent dragging when clicking interactive action buttons (e.g. Delete, Toolbar) or editing text in section headers
         if (e.OriginalSource is DependencyObject dep)
         {
-            if (FindParent<Button>(dep) != null || FindParent<TextBox>(dep) != null)
+            var button = FindParent<Button>(dep);
+            if (button != null && button.Command != vm.LaunchItemCommand)
+                return;
+
+            if (FindParent<TextBox>(dep) != null)
                 return;
         }
 
@@ -213,12 +217,10 @@ public partial class HomeView : UserControl
 
     private void ClearTargetHighlight()
     {
-        if (_hoveredTargetBorder != null)
-        {
-            _hoveredTargetBorder.ClearValue(Border.BorderBrushProperty);
-            _hoveredTargetBorder.ClearValue(Border.BorderThicknessProperty);
-            _hoveredTargetBorder.ClearValue(UIElement.EffectProperty);
-            _hoveredTargetBorder = null;
-        }
+        if (_hoveredTargetBorder == null) return;
+        _hoveredTargetBorder.ClearValue(Border.BorderBrushProperty);
+        _hoveredTargetBorder.ClearValue(Border.BorderThicknessProperty);
+        _hoveredTargetBorder.ClearValue(UIElement.EffectProperty);
+        _hoveredTargetBorder = null;
     }
 }
