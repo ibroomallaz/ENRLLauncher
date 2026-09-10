@@ -25,11 +25,18 @@ public class UpdaterService : IUpdaterService
         if (!Version.TryParse(requiredVersion, out var required)) return true;
 
         const string runtimePath = @"C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App";
-        if (!Directory.Exists(runtimePath)) return false;
+        if (!Directory.Exists(runtimePath))
+        {
+            _logger?.Write(AppLogLevel.Warning, "UpdaterService", $"Runtime path '{runtimePath}' not found.");
+            return false;
+        }
 
-        return Directory.GetDirectories(runtimePath)
+        var found = Directory.GetDirectories(runtimePath)
             .Select(Path.GetFileName)
             .Any(v => Version.TryParse(v, out var installed) && installed >= required);
+
+        _logger?.Write(AppLogLevel.Info, "UpdaterService", $"Probed .NET Desktop Runtime required={required}, installed={found}");
+        return found;
     }
 
     public async Task DownloadAndInstallAsync(CurrentVersion updateInfo, IProgress<string>? progressReporter = null)
@@ -45,32 +52,38 @@ public class UpdaterService : IUpdaterService
 
         try
         {
-            _logger?.Write(AppLogLevel.Info, "UpdaterService", $"Starting background download to: {tempDir}");
+            _logger?.Write(AppLogLevel.Info, "UpdaterService", $"Starting background download to: {tempDir}, needsFramework={needsFramework}");
 
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(90) };
+            using var client = new HttpClient();
+            client.Timeout = TimeSpan.FromSeconds(90);
             client.DefaultRequestHeaders.UserAgent.ParseAdd("ENRLLauncher/1.0");
 
             if (needsFramework && !string.IsNullOrWhiteSpace(updateInfo.SetupUrl) && !string.IsNullOrWhiteSpace(updateInfo.MsiUrl))
             {
                 progressReporter?.Report("Downloading .NET bootstrapper…");
+                _logger?.Write(AppLogLevel.Info, "UpdaterService", $"Downloading bootstrapper from {updateInfo.SetupUrl}");
                 await DownloadFileAsync(client, updateInfo.SetupUrl, setupPath);
 
                 progressReporter?.Report("Downloading update…");
+                _logger?.Write(AppLogLevel.Info, "UpdaterService", $"Downloading update MSI from {updateInfo.MsiUrl}");
                 await DownloadFileAsync(client, updateInfo.MsiUrl, msiPath);
 
                 progressReporter?.Report("Update ready. App will restart shortly…");
                 await Task.Delay(1500);
 
+                _logger?.Write(AppLogLevel.Info, "UpdaterService", $"Executing setup bootstrapper: {setupPath}");
                 ExecuteInstaller(setupPath, "/quiet /norestart");
             }
             else if (!string.IsNullOrWhiteSpace(updateInfo.MsiUrl))
             {
                 progressReporter?.Report("Downloading update…");
+                _logger?.Write(AppLogLevel.Info, "UpdaterService", $"Downloading update MSI from {updateInfo.MsiUrl}");
                 await DownloadFileAsync(client, updateInfo.MsiUrl, msiPath);
 
                 progressReporter?.Report("Update ready. App will restart shortly…");
                 await Task.Delay(1500);
 
+                _logger?.Write(AppLogLevel.Info, "UpdaterService", $"Executing msiexec for: {msiPath}");
                 ExecuteInstaller("msiexec.exe", $"/i \"{msiPath}\" /qn /norestart");
             }
             else
@@ -78,7 +91,7 @@ public class UpdaterService : IUpdaterService
                 throw new InvalidOperationException("No valid download URLs provided in update manifest.");
             }
 
-            // Shutdown current instance so the installer can overwrite files
+            _logger?.Write(AppLogLevel.Info, "UpdaterService", "Update process launched, shutting down application");
             Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
         }
         catch (Exception ex)
@@ -92,8 +105,6 @@ public class UpdaterService : IUpdaterService
         }
     }
 
-    // --- ATOMIC DOWNLOAD PATTERN ---
-    // Downloads as .download and renames only after successful completion
     private static async Task DownloadFileAsync(HttpClient client, string url, string destinationPath)
     {
         var tempPath = destinationPath + ".download";
@@ -107,16 +118,13 @@ public class UpdaterService : IUpdaterService
         File.Move(tempPath, destinationPath, overwrite: true);
     }
 
-    // --- POWERSHELL WATCHDOG ---
-    // Launches the installer and waits for it to exit before restarting this app
     private static void ExecuteInstaller(string fileName, string arguments)
     {
-        string? appPath = Process.GetCurrentProcess().MainModule?.FileName;
+        var appPath = Process.GetCurrentProcess().MainModule?.FileName;
 
         if (!string.IsNullOrEmpty(appPath))
         {
-            // PowerShell waits for the installer (-Wait), then restarts the original appPath
-            string psCommand = $"-Command \"Start-Process '{fileName}' -ArgumentList '{arguments}' -Wait; Start-Process '{appPath}' -ArgumentList '-updated'\"";
+            var psCommand = $"-Command \"Start-Process '{fileName}' -ArgumentList '{arguments}' -Wait; Start-Process '{appPath}' -ArgumentList '-updated'\"";
 
             Process.Start(new ProcessStartInfo
             {
@@ -129,7 +137,6 @@ public class UpdaterService : IUpdaterService
         }
         else
         {
-            // Fallback if we can't determine current process path
             Process.Start(new ProcessStartInfo { FileName = fileName, Arguments = arguments, UseShellExecute = true });
         }
     }
@@ -153,13 +160,14 @@ public class UpdaterService : IUpdaterService
 
         if (result == MessageBoxResult.Yes && !string.IsNullOrWhiteSpace(fallbackUrl))
         {
+            _logger?.Write(AppLogLevel.Info, "UpdaterService", $"User elected manual download: {fallbackUrl}");
             if (_httpService != null)
             {
                 _httpService.TryOpenUrl(fallbackUrl, out _);
             }
             else
             {
-                try { Process.Start(new ProcessStartInfo(fallbackUrl) { UseShellExecute = true }); } catch { }
+                try { Process.Start(new ProcessStartInfo(fallbackUrl) { UseShellExecute = true }); } catch { /* ignored */ }
             }
         }
     }
@@ -171,13 +179,20 @@ public class UpdaterService : IUpdaterService
         {
             try
             {
+                var cleaned = 0;
                 foreach (var dir in Directory.GetDirectories(Path.GetTempPath(), "ENRL_Update_*"))
                 {
                     try
                     {
                         Directory.Delete(dir, recursive: true);
+                        cleaned++;
                     }
-                    catch { /* directory might still be locked by running process */ }
+                    catch { /* directory might still be locked */ }
+                }
+
+                if (cleaned > 0)
+                {
+                    _logger?.Write(AppLogLevel.Info, "UpdaterService", $"Cleaned {cleaned} old update temp directories");
                 }
             }
             catch (Exception ex)

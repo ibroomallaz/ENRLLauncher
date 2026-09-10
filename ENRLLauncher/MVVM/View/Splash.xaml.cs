@@ -1,9 +1,7 @@
-﻿using System;
-using System.Windows;
-
+﻿
 namespace ENRLLauncher.MVVM.View;
 
-public partial class SplashWindow : Window
+public partial class SplashWindow
 {
     public SplashWindow()
     {
