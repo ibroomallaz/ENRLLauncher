@@ -44,6 +44,11 @@
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
         <Setter Property="BorderThickness" Value="1.5"/>
         <Style.Triggers>
+            <!-- Obvious, balanced hover highlight (rich navy lift + UA Oasis accent border) -->
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#183256"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.UA.Oasis}"/>
+            </Trigger>
             <DataTrigger Binding="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
                 <Setter Property="BorderBrush" Value="#475569"/>
                 <Setter Property="Background" Value="#142136"/>
@@ -61,8 +66,21 @@
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Command" Value="{Binding DataContext.LaunchItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
         <Setter Property="CommandParameter" Value="{Binding}"/>
+        <!-- Custom template suppresses default WPF Aero light-blue/white hover sheen -->
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="Transparent" BorderThickness="0">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
         <Style.Triggers>
             <DataTrigger Binding="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
                 <Setter Property="IsHitTestVisible" Value="False"/>
@@ -123,5 +141,27 @@
         <Setter Property="Background" Value="{DynamicResource Brush.Surface.Secondary}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Light}"/>
         <Setter Property="BorderThickness" Value="2"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#1E3A63"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.UA.Sky}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- 7. Explorer Drop Target Button Style -->
+    <Style x:Key="DropZoneButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="Transparent" BorderThickness="0">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 </ResourceDictionary>

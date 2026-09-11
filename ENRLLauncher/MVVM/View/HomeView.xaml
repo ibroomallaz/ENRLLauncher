@@ -278,7 +278,7 @@
                         Drop="DropZone_Drop" 
                         DragOver="DropZone_DragOver"
                         Visibility="{Binding IsDropCardVisible, Converter={StaticResource BoolToVis}}">
-                    <Button Background="Transparent" BorderThickness="0" Cursor="Hand" Command="{Binding OpenFilePickerCommand}">
+                    <Button Style="{StaticResource DropZoneButtonStyle}" Command="{Binding OpenFilePickerCommand}">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                             <TextBlock Text="+" FontSize="32" Foreground="{DynamicResource Brush.UA.Sky}" HorizontalAlignment="Center"/>
                             <TextBlock Text="Add / Drop File" FontSize="12" Foreground="{DynamicResource Brush.Text.Secondary}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
