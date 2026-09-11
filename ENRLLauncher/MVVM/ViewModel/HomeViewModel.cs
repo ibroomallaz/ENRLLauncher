@@ -232,7 +232,7 @@ public class HomeViewModel : ObservableObject
 
     private async Task LaunchAsync(LaunchItem item)
     {
-        if (IsEditMode || item == null) return;
+        if (IsEditMode || item == null || item.IsLaunching) return;
 
         if (item.TargetType is LaunchTargetType.HorizontalSeparator
                             or LaunchTargetType.LongVerticalSeparator
@@ -241,9 +241,30 @@ public class HomeViewModel : ObservableObject
             return;
         }
 
-        StatusMessage = $"Launching {item.Title}...";
-        bool success = await _launcherService.LaunchAsync(item);
-        StatusMessage = success ? "All systems ready" : $"Failed to launch {item.Title}";
+        try
+        {
+            item.IsLaunching = true;
+            Mouse.OverrideCursor = Cursors.AppStarting;
+            StatusMessage = $"Launching {item.Title}...";
+
+            var launchTask = _launcherService.LaunchAsync(item);
+            var minDelayTask = Task.Delay(2000);
+
+            await Task.WhenAll(launchTask, minDelayTask);
+            bool success = await launchTask;
+
+            StatusMessage = success ? "All systems ready" : $"Failed to launch {item.Title}";
+        }
+        catch (Exception ex)
+        {
+            _logger?.Error(nameof(HomeViewModel), $"Error launching {item.Title}: {ex.Message}");
+            StatusMessage = $"Failed to launch {item.Title}";
+        }
+        finally
+        {
+            item.IsLaunching = false;
+            Mouse.OverrideCursor = null;
+        }
     }
 
     private void UpdateSortOrders()

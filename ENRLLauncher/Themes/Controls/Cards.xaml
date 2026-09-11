@@ -1,29 +1,39 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Reusable Circular Delete Badge -->
+    <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+    <!-- 1. Reusable Circular Delete Badge -->
     <Style x:Key="CardDeleteButtonStyle" TargetType="Button">
-        <Setter Property="Width" Value="22"/>
-        <Setter Property="Height" Value="22"/>
         <Setter Property="Content" Value="✕"/>
+        <Setter Property="Width" Value="20"/>
+        <Setter Property="Height" Value="20"/>
         <Setter Property="FontSize" Value="10"/>
         <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="Background" Value="{DynamicResource Brush.Danger}"/>
+        <Setter Property="Background" Value="#EF4444"/>
         <Setter Property="Foreground" Value="#FFFFFF"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Visibility" Value="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}"/>
+        <Setter Property="Command" Value="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+        <Setter Property="CommandParameter" Value="{Binding}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}" CornerRadius="11">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="10">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#DC2626"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
 
-    <!-- Base Launch Card Shell -->
+    <!-- 2. Launch Card Outer Border Style -->
     <Style x:Key="LaunchCardBorderStyle" TargetType="Border">
         <Setter Property="Width" Value="215"/>
         <Setter Property="Height" Value="150"/>
@@ -32,6 +42,86 @@
         <Setter Property="Padding" Value="12"/>
         <Setter Property="Background" Value="{DynamicResource Brush.Surface.Primary}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value="1.5"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                <Setter Property="BorderBrush" Value="#475569"/>
+                <Setter Property="Background" Value="#142136"/>
+                <Setter Property="Cursor" Value="SizeAll"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsLaunching}" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.UA.Sky}"/>
+                <Setter Property="Background" Value="#13233F"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- 3. Launch Card Click Button Style -->
+    <Style x:Key="CardLaunchButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Command" Value="{Binding DataContext.LaunchItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+        <Setter Property="CommandParameter" Value="{Binding}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                <Setter Property="IsHitTestVisible" Value="False"/>
+                <Setter Property="Cursor" Value="SizeAll"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsLaunching}" Value="True">
+                <Setter Property="IsHitTestVisible" Value="False"/>
+                <Setter Property="Cursor" Value="Wait"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- 4. Launch Card Type / Launch State Badge Styles -->
+    <Style x:Key="CardBadgeBorderStyle" TargetType="Border">
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="8,3"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface.Tertiary}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsLaunching}" Value="True">
+                <Setter Property="Background" Value="{DynamicResource Brush.UA.Red}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="CardBadgeTextStyle" TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Text" Value="{Binding TargetType}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.UA.Oasis}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsLaunching}" Value="True">
+                <Setter Property="Text" Value="OPENING..."/>
+                <Setter Property="Foreground" Value="#FFFFFF"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- 5. Launch Card Bottom Indeterminate Progress Bar Style -->
+    <Style x:Key="CardProgressBarStyle" TargetType="ProgressBar">
+        <Setter Property="IsIndeterminate" Value="True"/>
+        <Setter Property="Height" Value="4"/>
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface.Tertiary}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.UA.Red}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="VerticalAlignment" Value="Bottom"/>
+        <Setter Property="Margin" Value="0"/>
+        <Setter Property="Visibility" Value="{Binding IsLaunching, Converter={StaticResource BoolToVis}}"/>
+    </Style>
+
+    <!-- 6. Explorer Drop Target Border Style -->
+    <Style x:Key="DropZoneCardBorderStyle" TargetType="Border">
+        <Setter Property="Width" Value="215"/>
+        <Setter Property="Height" Value="150"/>
+        <Setter Property="Margin" Value="10"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface.Secondary}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Light}"/>
+        <Setter Property="BorderThickness" Value="2"/>
     </Style>
 </ResourceDictionary>
