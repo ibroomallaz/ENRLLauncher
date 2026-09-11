@@ -22,8 +22,11 @@ public partial class MainWindow
 
         var homeVM = new HomeViewModel(launcherService, fileDialogService, layoutService);
         var settingsVM = new SettingsViewModel();
+        var httpService = new HttpService();
+        var updaterService = new UpdaterService(null, httpService);
+        var versionCheckerUi = new VersionCheckerUI(httpService, updaterService);
 
-        DataContext = new MainWindowViewModel(homeVM, settingsVM);
+        DataContext = new MainWindowViewModel(homeVM, settingsVM, versionCheckerUi);
     }
 
     public MainWindow(MainWindowViewModel viewModel)
