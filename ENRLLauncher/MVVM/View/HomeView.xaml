@@ -13,86 +13,14 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-
-        <!-- Reusable Edit Mode Toolbar Pill Button -->
-        <Style x:Key="EditModeToolbarButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#1E293B"/>
-            <Setter Property="Foreground" Value="#F8FAFC"/>
-            <Setter Property="BorderBrush" Value="#CBD5E1"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,3"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="8" 
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#334155"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
     </UserControl.Resources>
 
     <Grid Margin="0,4,0,0">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <!-- Edit Mode Divider Toolbar -->
-            <RowDefinition Height="*"/>
-            <!-- Tiles & In-Grid Dividers Workspace -->
-        </Grid.RowDefinitions>
-
-        <!-- 1. EDIT MODE ACTION BAR -->
-        <Border Grid.Row="0" 
-                HorizontalAlignment="Center" 
-                Margin="0,0,0,16" 
-                Padding="16,6" 
-                Background="#9A3412" 
-                BorderBrush="#EA580C" 
-                BorderThickness="1" 
-                CornerRadius="16"
-                Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVis}}">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="✏ EDIT MODE" 
-                           Foreground="#FFFFFF" 
-                           FontWeight="Bold" 
-                           FontSize="11" 
-                           VerticalAlignment="Center" 
-                           Margin="0,0,12,0"/>
-
-                <!-- Full Horizontal Row Break -->
-                <Button Content="+ Row Break" 
-                        Command="{Binding AddHorizontalSeparatorCommand}"
-                        Style="{StaticResource EditModeToolbarButtonStyle}"
-                        Margin="0,0,6,0"/>
-
-                <!-- Long Vertical Divider -->
-                <Button Content="+ Long Vertical" 
-                        Command="{Binding AddLongVerticalSeparatorCommand}"
-                        Style="{StaticResource EditModeToolbarButtonStyle}"
-                        Margin="0,0,6,0"/>
-
-                <!-- Short Vertical Divider -->
-                <Button Content="+ Short Vertical" 
-                        Command="{Binding AddShortVerticalSeparatorCommand}"
-                        Style="{StaticResource EditModeToolbarButtonStyle}"/>
-            </StackPanel>
-        </Border>
-
-        <!-- 2. WORKSPACE GRID -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <!-- WORKSPACE GRID -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel HorizontalAlignment="Stretch" Margin="0,0,0,20">
 
-                <!-- Dynamic Centered Launch Cards & In-Grid Separators -->
+                <!-- Dynamic Centered Launch Cards & In-Grid Dividers -->
                 <ItemsControl ItemsSource="{Binding Items}" HorizontalAlignment="Stretch">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -137,12 +65,12 @@
                                 </Border>
 
                                 <!-- B. FULL HORIZONTAL ROW BREAK WITH CENTERED EDITABLE LABEL -->
-                                <Border x:Name="HorizontalDivider"
+                                <Border x:Name="HorizontalDivider" 
                                         Tag="CardBorder"
                                         Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ScrollContentPresenter}}"
-                                        Height="46"
-                                        Margin="0,10"
-                                        Background="Transparent"
+                                        Height="46" 
+                                        Margin="0,10" 
+                                        Background="Transparent" 
                                         Visibility="Collapsed">
                                     <Grid VerticalAlignment="Center" Margin="8,0">
                                         <Grid.ColumnDefinitions>
@@ -162,54 +90,13 @@
                                                     Margin="16,0">
                                             <!-- Read Mode Header -->
                                             <TextBlock Text="{Binding Title}" 
-                                                       Foreground="{DynamicResource Brush.Text.Primary}" 
-                                                       FontSize="13" 
-                                                       FontWeight="Bold" 
-                                                       TextAlignment="Center"
-                                                       VerticalAlignment="Center">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
-                                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
+                                                       Style="{StaticResource EditModeSectionHeaderTextBlockStyle}"/>
 
-                                            <!-- Edit Mode Input Box -->
+                                            <!-- Edit Mode Editable Header -->
                                             <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
-                                                     LostFocus="SectionTitle_LostFocus"
-                                                     Foreground="{DynamicResource Brush.Text.Primary}"
-                                                     Background="#1E293B"
-                                                     BorderBrush="{DynamicResource Brush.UA.Sky}"
-                                                     BorderThickness="1"
-                                                     Padding="12,3"
-                                                     FontSize="12"
-                                                     FontWeight="SemiBold"
-                                                     TextAlignment="Center"
-                                                     MinWidth="150"
-                                                     VerticalAlignment="Center">
-                                                <TextBox.Resources>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="CornerRadius" Value="4"/>
-                                                    </Style>
-                                                </TextBox.Resources>
-                                                <TextBox.Style>
-                                                    <Style TargetType="TextBox">
-                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
-                                                                <Setter Property="Visibility" Value="Visible"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBox.Style>
-                                            </TextBox>
+                                                     Style="{StaticResource EditModeSectionTextBoxStyle}"/>
 
-                                            <!-- Delete Badge -->
+                                            <!-- In-line Delete Control Button (Edit Mode Only) -->
                                             <Button Style="{StaticResource CardDeleteButtonStyle}"
                                                     Margin="8,0,0,0"/>
                                         </StackPanel>
@@ -220,7 +107,7 @@
                                 </Border>
 
                                 <!-- C. LONG VERTICAL DIVIDER (Card Height) -->
-                                <Border x:Name="LongVerticalDivider"
+                                <Border x:Name="LongVerticalDivider" 
                                         Tag="CardBorder"
                                         Width="36" Height="150"
                                         Margin="6,10"
@@ -236,7 +123,7 @@
                                 </Border>
 
                                 <!-- D. SHORT VERTICAL DIVIDER (Centered Notch) -->
-                                <Border x:Name="ShortVerticalDivider"
+                                <Border x:Name="ShortVerticalDivider" 
                                         Tag="CardBorder"
                                         Width="32" Height="150"
                                         Margin="4,10"

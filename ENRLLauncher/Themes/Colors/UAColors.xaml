@@ -24,6 +24,12 @@
     <Color x:Key="Color.Border">#1E3A5F</Color>
     <Color x:Key="Color.Border.Light">#284B75</Color>
 
+    <!-- Edit Mode Tokens -->
+    <Color x:Key="Color.EditMode.Background">#9A3412</Color>
+    <Color x:Key="Color.EditMode.Border">#EA580C</Color>
+    <Color x:Key="Color.EditMode.Card.Background">#142136</Color>
+    <Color x:Key="Color.EditMode.Card.Border">#475569</Color>
+
     <!-- Typography Tokens -->
     <Color x:Key="Color.Text.Primary">#FFFFFF</Color>
     <Color x:Key="Color.Text.Secondary">#B0BEC5</Color>
@@ -52,6 +58,12 @@
     <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}"/>
     <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}"/>
     <SolidColorBrush x:Key="Brush.Border.Light" Color="{StaticResource Color.Border.Light}"/>
+
+    <!-- Edit Mode Brushes -->
+    <SolidColorBrush x:Key="Brush.EditMode.Background" Color="{StaticResource Color.EditMode.Background}"/>
+    <SolidColorBrush x:Key="Brush.EditMode.Border" Color="{StaticResource Color.EditMode.Border}"/>
+    <SolidColorBrush x:Key="Brush.EditMode.Card.Background" Color="{StaticResource Color.EditMode.Card.Background}"/>
+    <SolidColorBrush x:Key="Brush.EditMode.Card.Border" Color="{StaticResource Color.EditMode.Card.Border}"/>
 
     <!-- Typography Brushes -->
     <SolidColorBrush x:Key="Brush.Text.Primary" Color="{StaticResource Color.Text.Primary}"/>

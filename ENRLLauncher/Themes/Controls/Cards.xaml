@@ -50,8 +50,8 @@
                 <Setter Property="BorderBrush" Value="{DynamicResource Brush.UA.Oasis}"/>
             </Trigger>
             <DataTrigger Binding="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
-                <Setter Property="BorderBrush" Value="#475569"/>
-                <Setter Property="Background" Value="#142136"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.EditMode.Card.Border}"/>
+                <Setter Property="Background" Value="{DynamicResource Brush.EditMode.Card.Background}"/>
                 <Setter Property="Cursor" Value="SizeAll"/>
             </DataTrigger>
             <DataTrigger Binding="{Binding IsLaunching}" Value="True">

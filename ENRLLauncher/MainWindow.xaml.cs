@@ -15,18 +15,19 @@ public partial class MainWindow
         InitializeComponent();
 
         // Instantiate storage and domain layout dependencies
+        var appStateService = new AppStateService();
         var storageService = new JsonStorageService();
         var layoutService = new LayoutService(storageService);
         var launcherService = new LauncherService();
         var fileDialogService = new FileDialogService();
 
-        var homeVM = new HomeViewModel(launcherService, fileDialogService, layoutService);
+        var homeVM = new HomeViewModel(launcherService, fileDialogService, layoutService, appStateService);
         var settingsVM = new SettingsViewModel();
         var httpService = new HttpService();
         var updaterService = new UpdaterService(null, httpService);
         var versionCheckerUi = new VersionCheckerUI(httpService, updaterService);
 
-        DataContext = new MainWindowViewModel(homeVM, settingsVM, versionCheckerUi);
+        DataContext = new MainWindowViewModel(homeVM, settingsVM, appStateService, versionCheckerUi);
     }
 
     public MainWindow(MainWindowViewModel viewModel)
@@ -85,7 +86,7 @@ public partial class MainWindow
             WindowRootBorder.CornerRadius = new CornerRadius(0);
             WindowRootBorder.BorderThickness = new Thickness(0);
 
-            FullScreenBtn.Content = "🗗";
+            FullScreenBtn.Content = "\U0001F5D7";
             FullScreenBtn.ToolTip = "Exit Fullscreen (Esc / F11)";
             _isFullScreen = true;
         }

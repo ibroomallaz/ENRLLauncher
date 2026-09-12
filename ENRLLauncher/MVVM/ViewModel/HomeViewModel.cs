@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Windows.Input;
 using ENRLLauncher.Core.Enums;
@@ -13,9 +14,9 @@ public class HomeViewModel : ObservableObject
     private readonly ILauncherService _launcherService;
     private readonly IFileDialogService _fileDialogService;
     private readonly ILayoutService _layoutService;
+    private readonly IAppStateService _appStateService;
     private readonly IAppLogger? _logger;
 
-    private bool _isEditMode;
     private string _statusMessage = "All systems ready";
     private CancellationTokenSource? _saveDebounceCts;
 
@@ -31,25 +32,8 @@ public class HomeViewModel : ObservableObject
 
     public bool IsEditMode
     {
-        get => _isEditMode;
-        set
-        {
-            if (_isEditMode != value)
-            {
-                _isEditMode = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(IsDropCardVisible));
-                StatusMessage = _isEditMode
-                    ? "✏ Edit Mode Active — Drag cards to swap positions, click ✕ to delete"
-                    : "All systems ready";
-
-                // Immediate non-debounced flush on edit mode exit
-                if (!_isEditMode)
-                {
-                    _ = SaveCurrentLayoutAsync();
-                }
-            }
-        }
+        get => _appStateService.IsEditMode;
+        set => _appStateService.IsEditMode = value;
     }
 
     public string StatusMessage
@@ -77,14 +61,19 @@ public class HomeViewModel : ObservableObject
         ILauncherService launcherService,
         IFileDialogService fileDialogService,
         ILayoutService layoutService,
+        IAppStateService appStateService,
         IAppLogger? logger = null)
     {
         _launcherService = launcherService ?? throw new ArgumentNullException(nameof(launcherService));
         _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
         _layoutService = layoutService ?? throw new ArgumentNullException(nameof(layoutService));
+        _appStateService = appStateService ?? throw new ArgumentNullException(nameof(appStateService));
         _logger = logger;
 
         Items.CollectionChanged += (s, e) => OnPropertyChanged(nameof(IsDropCardVisible));
+
+        _appStateService.PropertyChanged += OnAppStatePropertyChanged;
+        _appStateService.AddSeparatorRequested += OnAddSeparatorRequested;
 
         LaunchItemCommand = new RelayCommand(async param =>
         {
@@ -121,6 +110,36 @@ public class HomeViewModel : ObservableObject
         _ = LoadInitialLayoutAsync();
     }
 
+    private void OnAppStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(IAppStateService.IsEditMode))
+        {
+            OnPropertyChanged(nameof(IsEditMode));
+            OnPropertyChanged(nameof(IsDropCardVisible));
+            StatusMessage = _appStateService.IsEditMode
+                ? "✏ Edit Mode Active — Drag cards to swap positions, click ✕ to delete"
+                : "All systems ready";
+
+            // Immediate non-debounced flush on edit mode exit
+            if (!_appStateService.IsEditMode)
+            {
+                _ = SaveCurrentLayoutAsync();
+            }
+        }
+    }
+
+    private void OnAddSeparatorRequested(LaunchTargetType type)
+    {
+        var defaultTitle = type switch
+        {
+            LaunchTargetType.HorizontalSeparator => "Section Break",
+            LaunchTargetType.LongVerticalSeparator => "Long Vertical",
+            LaunchTargetType.ShortVerticalSeparator => "Short Vertical",
+            _ => "Separator"
+        };
+        AddSeparator(type, defaultTitle);
+    }
+
     private async Task LoadInitialLayoutAsync()
     {
         var savedItems = await _layoutService.LoadLayoutAsync();
@@ -138,37 +157,36 @@ public class HomeViewModel : ObservableObject
     public async Task SaveCurrentLayoutAsync()
     {
         await _layoutService.SaveLayoutAsync(Items);
+        _logger?.Info(nameof(HomeViewModel), "Saved layout immediately (flushed on exit/edit mode change)");
     }
 
-    private void RequestLayoutSave()
+    public void RequestLayoutSave()
     {
         _saveDebounceCts?.Cancel();
         _saveDebounceCts = new CancellationTokenSource();
         var token = _saveDebounceCts.Token;
 
-        Task.Run(async () =>
+        Task.Delay(1000, token).ContinueWith(async t =>
         {
-            try
+            if (!t.IsCanceled)
             {
-                await Task.Delay(400, token);
-                if (!token.IsCancellationRequested)
-                {
-                    await SaveCurrentLayoutAsync();
-                }
+                await _layoutService.SaveLayoutAsync(Items);
+                _logger?.Info(nameof(HomeViewModel), "Layout auto-saved after debounce interval");
             }
-            catch (OperationCanceledException) { }
-        }, token);
+        }, TaskScheduler.Default);
     }
 
     public void Reorder(int oldIndex, int newIndex)
     {
-        if (oldIndex >= 0 && oldIndex < Items.Count && newIndex >= 0 && newIndex < Items.Count && oldIndex != newIndex)
-        {
-            Items.Move(oldIndex, newIndex);
-            UpdateSortOrders();
-            RequestLayoutSave();
-        }
+        if (oldIndex < 0 || oldIndex >= Items.Count || newIndex < 0 || newIndex >= Items.Count || oldIndex == newIndex)
+            return;
+
+        Items.Move(oldIndex, newIndex);
+        UpdateSortOrders();
+        RequestLayoutSave();
     }
+
+    public void SwapItems(int oldIndex, int newIndex) => Reorder(oldIndex, newIndex);
 
     public void AddDroppedFile(string filePath)
     {
@@ -235,8 +253,8 @@ public class HomeViewModel : ObservableObject
         if (IsEditMode || item == null || item.IsLaunching) return;
 
         if (item.TargetType is LaunchTargetType.HorizontalSeparator
-                            or LaunchTargetType.LongVerticalSeparator
-                            or LaunchTargetType.ShortVerticalSeparator)
+            or LaunchTargetType.LongVerticalSeparator
+            or LaunchTargetType.ShortVerticalSeparator)
         {
             return;
         }

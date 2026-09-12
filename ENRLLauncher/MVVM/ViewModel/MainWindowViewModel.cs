@@ -13,12 +13,12 @@ namespace ENRLLauncher.MVVM.ViewModel;
 public class MainWindowViewModel : ObservableObject
 {
     private readonly VersionCheckerUI _versionCheckerUi;
+    private readonly IAppStateService _appStateService;
     private readonly IAppLogger? _logger;
     private readonly DispatcherTimer _clockTimer;
 
     private object _currentView;
     private string _currentTime = string.Empty;
-    private bool _isEditMode;
     private bool _isCompactMode;
 
     private bool _isCheckingForUpdates;
@@ -94,6 +94,7 @@ public class MainWindowViewModel : ObservableObject
             {
                 _currentView = value;
                 OnPropertyChanged();
+                _appStateService.IsHomeViewActive = _currentView is HomeViewModel;
             }
         }
     }
@@ -111,19 +112,15 @@ public class MainWindowViewModel : ObservableObject
         }
     }
 
-    private bool IsEditMode
+    public bool IsEditMode
     {
-        get => _isEditMode;
-        set
-        {
-            if (_isEditMode != value)
-            {
-                _isEditMode = value;
-                OnPropertyChanged();
-                HomeVM.IsEditMode = value; // Sync edit mode state to active Home view
-            }
-        }
+        get => _appStateService.IsEditMode;
+        set => _appStateService.IsEditMode = value;
     }
+
+    public bool IsHomeViewActive => _appStateService.IsHomeViewActive;
+    public bool IsEditModeButtonVisible => _appStateService.IsHomeViewActive;
+    public bool IsEditModeControlsVisible => _appStateService.IsEditMode && _appStateService.IsHomeViewActive;
 
     private bool IsCompactMode
     {
@@ -143,18 +140,39 @@ public class MainWindowViewModel : ObservableObject
     public ICommand ToggleEditModeCommand { get; }
     public ICommand ToggleCompactModeCommand { get; }
     public ICommand CheckUpdateCommand { get; }
+    public ICommand AddHorizontalSeparatorCommand { get; }
+    public ICommand AddLongVerticalSeparatorCommand { get; }
+    public ICommand AddShortVerticalSeparatorCommand { get; }
 
     public MainWindowViewModel(
         HomeViewModel homeVM,
         SettingsViewModel settingsVM,
+        IAppStateService appStateService,
         VersionCheckerUI? versionCheckerUi = null,
         IAppLogger? logger = null)
     {
         HomeVM = homeVM ?? throw new ArgumentNullException(nameof(homeVM));
         SettingsVM = settingsVM ?? throw new ArgumentNullException(nameof(settingsVM));
+        _appStateService = appStateService ?? throw new ArgumentNullException(nameof(appStateService));
         _versionCheckerUi = versionCheckerUi ?? new VersionCheckerUI(new HttpService(), new UpdaterService());
         _logger = logger;
         _currentView = HomeVM;
+        _appStateService.IsHomeViewActive = true;
+
+        _appStateService.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(IAppStateService.IsEditMode))
+            {
+                OnPropertyChanged(nameof(IsEditMode));
+                OnPropertyChanged(nameof(IsEditModeControlsVisible));
+            }
+            else if (e.PropertyName == nameof(IAppStateService.IsHomeViewActive))
+            {
+                OnPropertyChanged(nameof(IsHomeViewActive));
+                OnPropertyChanged(nameof(IsEditModeButtonVisible));
+                OnPropertyChanged(nameof(IsEditModeControlsVisible));
+            }
+        };
 
         _versionCheckerUi.CheckingStateChanged += OnCheckingStateChanged;
         _versionCheckerUi.UpdateAvailabilityChanged += OnUpdateAvailabilityChanged;
@@ -173,6 +191,13 @@ public class MainWindowViewModel : ObservableObject
         ToggleEditModeCommand = new RelayCommand(_ => IsEditMode = !IsEditMode);
         ToggleCompactModeCommand = new RelayCommand(_ => IsCompactMode = !IsCompactMode);
         CheckUpdateCommand = new RelayCommand(_ => ExecuteCheckUpdate(), _ => !IsCheckingForUpdates);
+
+        AddHorizontalSeparatorCommand = new RelayCommand(_ =>
+            _appStateService.RequestAddSeparator(LaunchTargetType.HorizontalSeparator));
+        AddLongVerticalSeparatorCommand = new RelayCommand(_ =>
+            _appStateService.RequestAddSeparator(LaunchTargetType.LongVerticalSeparator));
+        AddShortVerticalSeparatorCommand = new RelayCommand(_ =>
+            _appStateService.RequestAddSeparator(LaunchTargetType.ShortVerticalSeparator));
 
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _clockTimer.Tick += (_, _) => CurrentTime = DateTime.Now.ToString("h:mm tt");

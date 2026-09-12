@@ -28,6 +28,7 @@ public partial class App
         services.AddSingleton<IAppLogger>(_ => _logger ?? new FileLogger(Globals.g_LogsDir));
 
         // Core Services
+        services.AddSingleton<IAppStateService, AppStateService>();
         services.AddSingleton<IHttpService, HttpService>();
         services.AddSingleton<IUpdaterService, UpdaterService>();
         services.AddSingleton<VersionCheckerUI>();
