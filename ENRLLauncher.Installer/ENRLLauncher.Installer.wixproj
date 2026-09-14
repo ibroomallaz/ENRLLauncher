@@ -1,0 +1,20 @@
+﻿<Project Sdk="WixToolset.Sdk/5.0.2">
+  <PropertyGroup>
+    <OutputType>Package</OutputType>
+    <OutputName>ENRL_Installer</OutputName>
+    <Platforms>AnyCPU;x64</Platforms>
+    <Configurations>Debug;Release</Configurations>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <SuppressIces>ICE38;ICE64;ICE91</SuppressIces>
+    <SuppressValidation>true</SuppressValidation>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ENRLLauncher\ENRLLauncher.csproj" Publish="true" />
+  </ItemGroup>
+</Project>

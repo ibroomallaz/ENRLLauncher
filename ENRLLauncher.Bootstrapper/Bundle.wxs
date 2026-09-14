@@ -1,0 +1,17 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+  <Bundle Name="Arizona Admissions Launcher"
+          Manufacturer="UArizona"
+          Version="0.0.1.0"
+          UpgradeCode="C645CD7B-2F33-4846-AF2C-0588FE23B456"
+          IconSourceFile="..\ENRLLauncher\Assets\app.ico">
+
+    <BootstrapperApplication>
+      <bal:WixStandardBootstrapperApplication LicenseUrl="" Theme="none" />
+    </BootstrapperApplication>
+
+    <Chain>
+      <MsiPackage SourceFile="$(var.ENRLLauncher.Installer.TargetPath)" />
+    </Chain>
+  </Bundle>
+</Wix>
