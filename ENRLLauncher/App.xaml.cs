@@ -33,6 +33,7 @@ public partial class App
         services.AddSingleton<IUpdaterService, UpdaterService>();
         services.AddSingleton<VersionCheckerUI>();
         services.AddSingleton<ILayoutService, LayoutService>();
+        services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<ILauncherService, LauncherService>();
         services.AddSingleton<IFileDialogService, FileDialogService>();
 
@@ -131,6 +132,21 @@ public partial class App
         var mainWindow = Services.GetRequiredService<MainWindow>();
         MainWindow = mainWindow;
 
+        // Apply startup window preferences
+        try
+        {
+            var settingsService = Services.GetRequiredService<ISettingsService>();
+            var settings = await settingsService.LoadSettingsAsync();
+            if (settings?.StartInFullScreen == true)
+            {
+                mainWindow.ApplyFullScreen(true);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.Write(AppLogLevel.Warning, "Startup", $"Failed reading startup settings: {ex.Message}");
+        }
+
         // 6. Dismiss splash upon first window render and check optional updates
         mainWindow.ContentRendered += (_, _) =>
         {
@@ -147,13 +163,16 @@ public partial class App
             {
                 try
                 {
-                    _logger.Write(AppLogLevel.Info, "UpdateCheck", "Triggering post-render optional update check");
-                    var updateUi = Services.GetRequiredService<VersionCheckerUI>();
-                    await updateUi.CheckAsync(showUpToDatePopup: false, owner: mainWindow);
+                    _logger?.Write(AppLogLevel.Info, "UpdateCheck", "Triggering post-render optional update check");
+                    var updateUi = Services.GetService<VersionCheckerUI>();
+                    if (updateUi != null)
+                    {
+                        await updateUi.CheckAsync(showUpToDatePopup: false, owner: mainWindow);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.Write(AppLogLevel.Warning, "UpdateCheck", $"Background update check failed: {ex.Message}");
+                    _logger?.Write(AppLogLevel.Warning, "UpdateCheck", $"Background update check failed: {ex.Message}");
                 }
             }, System.Windows.Threading.DispatcherPriority.Background);
         };
