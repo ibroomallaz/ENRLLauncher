@@ -2,7 +2,9 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using ENRLLauncher.Core.Enums;
 using ENRLLauncher.Core.Interfaces;
+using ENRLLauncher.Core.Services;
 using ENRLLauncher.Core.Utilities;
 using ENRLLauncher.MVVM.Model;
 using ENRLLauncher.MVVM.Model.Schema;
@@ -11,13 +13,14 @@ using ENRLLauncher.MVVM.ViewModel.Dialogs;
 
 namespace ENRLLauncher.MVVM.ViewModel
 {
-
     public class SettingsViewModel : ObservableObject
     {
         private readonly ISettingsService _settingsService;
         private readonly IFileDialogService _fileDialogService;
         private readonly IJsonStorageService _storageService;
         private readonly ISecurityService _securityService;
+        private readonly VersionCheckerUI? _versionCheckerUi;
+        private readonly IHttpService? _httpService;
         private readonly IAppLogger? _logger;
 
         private bool _startInFullScreen;
@@ -27,6 +30,13 @@ namespace ENRLLauncher.MVVM.ViewModel
         private bool _isSaving;
         private string _statusMessage = "Ready";
         private string _backupStatusMessage = string.Empty;
+
+        // --- Software Updates & Version Fields ---
+        private bool _isCheckingForUpdates;
+        private bool _isUpdateAvailable;
+        private string? _availableVersion;
+        private string _updateStatusMessage = $"You're running the latest version (v{Globals.g_AppVersion}).";
+        private string _lastCheckedMessage = string.Empty;
 
         private CancellationTokenSource? _saveDebounceCts;
 
@@ -96,6 +106,67 @@ namespace ENRLLauncher.MVVM.ViewModel
             set => Set(ref _backupStatusMessage, value);
         }
 
+        // --- Software Updates & Version Properties ---
+
+        public string AppName => "Arizona Admissions Launcher";
+        public string AppVersionDisplay => $"v{Globals.g_AppVersion}";
+        public string FileVersionDisplay => Globals.g_FileVersion;
+        public string DeveloperName => "Isaac Broomall";
+        public string DeveloperCredit => "Developed by Isaac Broomall";
+        public string GithubUrl => "https://github.com/ibroomallaz/ENRLLauncher";
+
+        public bool IsCheckingForUpdates
+        {
+            get => _isCheckingForUpdates;
+            set
+            {
+                if (Set(ref _isCheckingForUpdates, value))
+                {
+                    CommandManager.InvalidateRequerySuggested();
+                }
+            }
+        }
+
+        public bool IsUpdateAvailable
+        {
+            get => _isUpdateAvailable;
+            set
+            {
+                if (Set(ref _isUpdateAvailable, value))
+                {
+                    CommandManager.InvalidateRequerySuggested();
+                }
+            }
+        }
+
+        public string? AvailableVersion
+        {
+            get => _availableVersion;
+            set
+            {
+                if (Set(ref _availableVersion, value))
+                {
+                    OnPropertyChanged(nameof(UpdateButtonLabel));
+                }
+            }
+        }
+
+        public string UpdateButtonLabel => string.IsNullOrWhiteSpace(_availableVersion)
+            ? "Install Update"
+            : $"Install Update ({_availableVersion})";
+
+        public string UpdateStatusMessage
+        {
+            get => _updateStatusMessage;
+            set => Set(ref _updateStatusMessage, value);
+        }
+
+        public string LastCheckedMessage
+        {
+            get => _lastCheckedMessage;
+            set => Set(ref _lastCheckedMessage, value);
+        }
+
         // --- Commands ---
 
         public ICommand SaveSettingsCommand { get; }
@@ -106,17 +177,25 @@ namespace ENRLLauncher.MVVM.ViewModel
         public ICommand OpenLogsFolderCommand { get; }
         public ICommand ChangePinCommand { get; }
 
+        public ICommand CheckForUpdatesCommand { get; }
+        public ICommand InstallUpdateCommand { get; }
+        public ICommand OpenGitHubCommand { get; }
+
         public SettingsViewModel(
             ISettingsService settingsService,
             IFileDialogService fileDialogService,
             IJsonStorageService storageService,
             ISecurityService securityService,
+            VersionCheckerUI? versionCheckerUi = null,
+            IHttpService? httpService = null,
             IAppLogger? logger = null)
         {
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
             _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
             _securityService = securityService ?? throw new ArgumentNullException(nameof(securityService));
+            _versionCheckerUi = versionCheckerUi;
+            _httpService = httpService;
             _logger = logger;
 
             SaveSettingsCommand = new RelayCommand(_ => TriggerDebouncedSave(), _ => !IsSaving);
@@ -127,7 +206,115 @@ namespace ENRLLauncher.MVVM.ViewModel
             OpenLogsFolderCommand = new RelayCommand(_ => OpenFolder(Globals.g_LogsDir));
             ChangePinCommand = new RelayCommand(_ => ExecuteChangePin(), _ => RequirePinForEditMode);
 
+            CheckForUpdatesCommand = new RelayCommand(async _ => await ExecuteCheckForUpdatesAsync(), _ => !IsCheckingForUpdates);
+            InstallUpdateCommand = new RelayCommand(_ => ExecuteInstallUpdate(), _ => IsUpdateAvailable);
+            OpenGitHubCommand = new RelayCommand(_ => ExecuteOpenGitHub());
+
+            if (_versionCheckerUi != null)
+            {
+                _versionCheckerUi.CheckingStateChanged += OnCheckingStateChanged;
+                _versionCheckerUi.UpdateAvailabilityChanged += OnUpdateAvailabilityChanged;
+
+                if (_versionCheckerUi.IsUpdateAvailable && _versionCheckerUi.AvailableUpdate != null)
+                {
+                    OnUpdateAvailabilityChanged(true, _versionCheckerUi.AvailableUpdate);
+                }
+                else
+                {
+                    UpdateStatusMessage = $"You're running the latest version ({AppVersionDisplay}).";
+                }
+            }
+
             _ = LoadInitialSettingsAsync();
+        }
+
+        private void OnCheckingStateChanged(bool isChecking)
+        {
+            if (Application.Current?.Dispatcher != null && !Application.Current.Dispatcher.CheckAccess())
+            {
+                Application.Current.Dispatcher.Invoke(() => OnCheckingStateChanged(isChecking));
+                return;
+            }
+
+            IsCheckingForUpdates = isChecking;
+            if (isChecking)
+            {
+                UpdateStatusMessage = "Checking remote repository for updates\u2026";
+            }
+        }
+
+        private void OnUpdateAvailabilityChanged(bool available, CurrentVersion? update)
+        {
+            if (Application.Current?.Dispatcher != null && !Application.Current.Dispatcher.CheckAccess())
+            {
+                Application.Current.Dispatcher.Invoke(() => OnUpdateAvailabilityChanged(available, update));
+                return;
+            }
+
+            IsUpdateAvailable = available;
+            AvailableVersion = update?.Version;
+
+            if (available && update != null)
+            {
+                UpdateStatusMessage = $"New update available: {update.Version}";
+            }
+            else
+            {
+                UpdateStatusMessage = $"You're running the latest version ({AppVersionDisplay}).";
+            }
+            LastCheckedMessage = $"Last checked: {DateTime.Now:h:mm tt}";
+        }
+
+        private async Task ExecuteCheckForUpdatesAsync()
+        {
+            if (_versionCheckerUi == null)
+            {
+                UpdateStatusMessage = "Update check service unavailable.";
+                return;
+            }
+
+            try
+            {
+                _logger?.Write(AppLogLevel.Info, nameof(SettingsViewModel), "User initiated update check from Settings");
+                var owner = Application.Current?.MainWindow;
+                await _versionCheckerUi.CheckAsync(showUpToDatePopup: true, owner: owner, forceShowDialog: true);
+                LastCheckedMessage = $"Last checked: {DateTime.Now:h:mm tt}";
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error(nameof(SettingsViewModel), "Update check failed", ex);
+                UpdateStatusMessage = "Failed to check for updates.";
+            }
+        }
+
+        private void ExecuteInstallUpdate()
+        {
+            var owner = Application.Current?.MainWindow;
+            if (_versionCheckerUi != null && _versionCheckerUi.IsUpdateAvailable)
+            {
+                _versionCheckerUi.OpenUpdateDialog(owner);
+            }
+        }
+
+        private void ExecuteOpenGitHub()
+        {
+            try
+            {
+                if (_httpService != null && _httpService.TryOpenUrl(GithubUrl, out var err))
+                {
+                    if (err == null) return;
+                }
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = GithubUrl,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error(nameof(SettingsViewModel), "Failed opening GitHub URL", ex);
+            }
         }
 
         // Loads current configuration from disk on initialization
@@ -263,7 +450,7 @@ namespace ENRLLauncher.MVVM.ViewModel
             var token = _saveDebounceCts.Token;
 
             IsSaving = true;
-            StatusMessage = "Saving changes…";
+            StatusMessage = "Saving changes\u2026";
 
             Task.Delay(400, token).ContinueWith(async task =>
             {

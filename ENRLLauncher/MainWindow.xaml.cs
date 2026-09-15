@@ -86,11 +86,12 @@ public partial class MainWindow
         var launcherService = new LauncherService();
         var fileDialogService = new FileDialogService();
 
-        var homeVM = new HomeViewModel(launcherService, fileDialogService, layoutService, appStateService);
-        var settingsVM = new SettingsViewModel(settingsService, fileDialogService, storageService, securityService);
         var httpService = new HttpService();
         var updaterService = new UpdaterService(null, httpService);
         var versionCheckerUi = new VersionCheckerUI(httpService, updaterService);
+
+        var homeVM = new HomeViewModel(launcherService, fileDialogService, layoutService, appStateService);
+        var settingsVM = new SettingsViewModel(settingsService, fileDialogService, storageService, securityService, versionCheckerUi, httpService);
 
         DataContext = new MainWindowViewModel(homeVM, settingsVM, appStateService, securityService, versionCheckerUi);
     }

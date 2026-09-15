@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="600" d:DesignWidth="1000">
+             d:DesignHeight="700" d:DesignWidth="1100">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -41,68 +41,70 @@
                     <TextBlock Grid.Row="0" Text="Startup &amp; Behavior" FontWeight="Bold" 
                                Foreground="{DynamicResource Brush.UA.Sky}" FontSize="15" Margin="0,0,0,16"/>
 
-                    <StackPanel Grid.Row="1">
-                        <!-- Start in Fullscreen -->
-                        <Border Background="{DynamicResource Brush.Surface.Secondary}" 
-                                BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                                CornerRadius="8" Padding="14" Margin="0,0,0,14">
-                            <StackPanel>
-                                <CheckBox Content="Start in Fullscreen mode" 
-                                          IsChecked="{Binding StartInFullScreen}"
-                                          Foreground="{DynamicResource Brush.Text.Primary}" 
-                                          FontWeight="SemiBold" FontSize="13"/>
-                                <TextBlock Text="Opens the application directly into borderless presentation kiosk mode." 
-                                           Foreground="{DynamicResource Brush.Text.Muted}" FontSize="11" 
-                                           Margin="20,4,0,0" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Launch on Windows Startup -->
-                        <Border Background="{DynamicResource Brush.Surface.Secondary}" 
-                                BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                                CornerRadius="8" Padding="14" Margin="0,0,0,14">
-                            <StackPanel>
-                                <CheckBox Content="Launch app on Windows startup" 
-                                          IsChecked="{Binding LaunchOnWindowsStartup}"
-                                          Foreground="{DynamicResource Brush.Text.Primary}" 
-                                          FontWeight="SemiBold" FontSize="13"/>
-                                <TextBlock Text="Automatically starts the Arizona Admissions Launcher when logging into Windows." 
-                                           Foreground="{DynamicResource Brush.Text.Muted}" FontSize="11" 
-                                           Margin="20,4,0,0" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Edit Mode PIN Protection -->
-                        <Border Background="{DynamicResource Brush.Surface.Secondary}" 
-                                BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                                CornerRadius="8" Padding="14" Margin="0,0,0,14">
-                            <StackPanel>
-                                <CheckBox Content="Require PIN for Edit Mode" 
-                                          IsChecked="{Binding RequirePinForEditMode}"
-                                          Foreground="{DynamicResource Brush.Text.Primary}" 
-                                          FontWeight="SemiBold" FontSize="13"/>
-                                <TextBlock Text="Prevents unauthorized modifications to shortcut tiles and layouts without entering a PIN or Windows Administrator authorization." 
-                                           Foreground="{DynamicResource Brush.Text.Muted}" FontSize="11" 
-                                           Margin="20,4,0,0" TextWrapping="Wrap"/>
-
-                                <StackPanel Orientation="Horizontal" Margin="20,10,0,0"
-                                            Visibility="{Binding RequirePinForEditMode, Converter={StaticResource BoolToVis}}">
-                                    <Button Content="Change PIN…" 
-                                            Command="{Binding ChangePinCommand}"
-                                            Background="{DynamicResource Brush.Surface.Tertiary}"
-                                            Foreground="{DynamicResource Brush.Text.Primary}"
-                                            Padding="12,5" FontSize="11" FontWeight="SemiBold"
-                                            BorderThickness="0" Cursor="Hand">
-                                        <Button.Resources>
-                                            <Style TargetType="Border">
-                                                <Setter Property="CornerRadius" Value="4"/>
-                                            </Style>
-                                        </Button.Resources>
-                                    </Button>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,14">
+                        <StackPanel>
+                            <!-- Start in Fullscreen -->
+                            <Border Background="{DynamicResource Brush.Surface.Secondary}" 
+                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
+                                    CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <CheckBox Content="Start in Fullscreen mode" 
+                                              IsChecked="{Binding StartInFullScreen}"
+                                              Foreground="{DynamicResource Brush.Text.Primary}" 
+                                              FontWeight="SemiBold" FontSize="13"/>
+                                    <TextBlock Text="Opens the application directly into borderless presentation kiosk mode." 
+                                               Foreground="{DynamicResource Brush.Text.Muted}" FontSize="11" 
+                                               Margin="20,4,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
+                            </Border>
+
+                            <!-- Launch on Windows Startup -->
+                            <Border Background="{DynamicResource Brush.Surface.Secondary}" 
+                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
+                                    CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <CheckBox Content="Launch app on Windows startup" 
+                                              IsChecked="{Binding LaunchOnWindowsStartup}"
+                                              Foreground="{DynamicResource Brush.Text.Primary}" 
+                                              FontWeight="SemiBold" FontSize="13"/>
+                                    <TextBlock Text="Automatically starts the Arizona Admissions Launcher when logging into Windows." 
+                                               Foreground="{DynamicResource Brush.Text.Muted}" FontSize="11" 
+                                               Margin="20,4,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Edit Mode PIN Protection -->
+                            <Border Background="{DynamicResource Brush.Surface.Secondary}" 
+                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
+                                    CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <CheckBox Content="Require PIN for Edit Mode" 
+                                              IsChecked="{Binding RequirePinForEditMode}"
+                                              Foreground="{DynamicResource Brush.Text.Primary}" 
+                                              FontWeight="SemiBold" FontSize="13"/>
+                                    <TextBlock Text="Prevents unauthorized modifications to shortcut tiles and layouts without entering a PIN or Windows Administrator authorization." 
+                                               Foreground="{DynamicResource Brush.Text.Muted}" FontSize="11" 
+                                               Margin="20,4,0,0" TextWrapping="Wrap"/>
+
+                                    <StackPanel Orientation="Horizontal" Margin="20,10,0,0"
+                                                Visibility="{Binding RequirePinForEditMode, Converter={StaticResource BoolToVis}}">
+                                        <Button Content="Change PIN&#x2026;" 
+                                                Command="{Binding ChangePinCommand}"
+                                                Background="{DynamicResource Brush.Surface.Tertiary}"
+                                                Foreground="{DynamicResource Brush.Text.Primary}"
+                                                Padding="12,5" FontSize="11" FontWeight="SemiBold"
+                                                BorderThickness="0" Cursor="Hand">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="4"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
 
                     <!-- Save Action Section -->
                     <Border Grid.Row="2" Background="{DynamicResource Brush.Surface.Secondary}" 
@@ -140,7 +142,7 @@
                 </Grid>
             </Border>
 
-            <!-- Right Pane: Backup & Storage Controls -->
+            <!-- Right Pane: Updates, About & Storage Controls -->
             <Border Grid.Column="1" Background="{DynamicResource Brush.Surface.Primary}" 
                     BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
                     CornerRadius="10" Padding="20">
@@ -151,11 +153,240 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Backup &amp; Data Management" FontWeight="Bold" 
+                    <TextBlock Grid.Row="0" Text="System, Updates &amp; Data" FontWeight="Bold" 
                                Foreground="{DynamicResource Brush.UA.Sky}" FontSize="15" Margin="0,0,0,16"/>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                         <StackPanel>
+                            <!-- Software Updates Section -->
+                            <Border Background="{DynamicResource Brush.Surface.Secondary}" 
+                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
+                                    CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <!-- Header Row with Status Badge -->
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Software Updates" FontWeight="SemiBold" 
+                                                       Foreground="{DynamicResource Brush.Text.Primary}" FontSize="13"/>
+                                            <TextBlock Text="Check for application updates and keep the launcher current." 
+                                                       Foreground="{DynamicResource Brush.Text.Muted}" FontSize="11" Margin="0,2,0,0"/>
+                                        </StackPanel>
+
+                                        <!-- Status Badge Indicator -->
+                                        <Border Grid.Column="1" VerticalAlignment="Center" CornerRadius="10" Padding="8,3" BorderThickness="1">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <!-- Default state: Up to date -->
+                                                    <Setter Property="Background" Value="#132742"/>
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsUpdateAvailable}" Value="True">
+                                                            <Setter Property="Background" Value="#2B1320"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource Brush.UA.Red}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsCheckingForUpdates}" Value="True">
+                                                            <Setter Property="Background" Value="#102035"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource Brush.UA.Sky}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Ellipse Width="6" Height="6" Margin="0,0,6,0" VerticalAlignment="Center">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="Ellipse">
+                                                            <Setter Property="Fill" Value="{DynamicResource Brush.Success}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsUpdateAvailable}" Value="True">
+                                                                    <Setter Property="Fill" Value="#EF4444"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsCheckingForUpdates}" Value="True">
+                                                                    <Setter Property="Fill" Value="{DynamicResource Brush.UA.Sky}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                                <TextBlock FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="Up to date"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource Brush.Success}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsUpdateAvailable}" Value="True">
+                                                                    <Setter Property="Text" Value="Update Available"/>
+                                                                    <Setter Property="Foreground" Value="#FCA5A5"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsCheckingForUpdates}" Value="True">
+                                                                    <Setter Property="Text" Value="Checking&#x2026;"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource Brush.UA.Sky}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Current Version & Status Info -->
+                                    <Border Background="{DynamicResource Brush.Surface.Primary}" 
+                                            BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
+                                            CornerRadius="6" Padding="12,10" Margin="0,0,0,10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Current Version -->
+                                            <StackPanel Grid.Column="0" Margin="0,0,20,0">
+                                                <TextBlock Text="Installed Version" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="10"/>
+                                                <TextBlock Text="{Binding AppVersionDisplay}" Foreground="{DynamicResource Brush.Text.Primary}" 
+                                                           FontWeight="SemiBold" FontSize="12" Margin="0,2,0,0"/>
+                                            </StackPanel>
+
+                                            <!-- Update Status Message -->
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="Status" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="10"/>
+                                                <TextBlock Text="{Binding UpdateStatusMessage}" Foreground="{DynamicResource Brush.UA.Sky}" 
+                                                           FontWeight="SemiBold" FontSize="12" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+
+                                            <!-- Last Checked Timestamp -->
+                                            <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                <TextBlock Text="{Binding LastCheckedMessage}" Foreground="{DynamicResource Brush.Text.Muted}" 
+                                                           FontSize="11" FontStyle="Italic"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Progress bar while checking -->
+                                    <ProgressBar IsIndeterminate="True" Height="3" Margin="0,0,0,10"
+                                                 Visibility="{Binding IsCheckingForUpdates, Converter={StaticResource BoolToVis}}"
+                                                 Background="{DynamicResource Brush.Surface.Tertiary}"
+                                                 Foreground="{DynamicResource Brush.UA.Sky}"/>
+
+                                    <!-- Action Buttons -->
+                                    <WrapPanel>
+                                        <Button Content="Check for Updates" 
+                                                Command="{Binding CheckForUpdatesCommand}" 
+                                                Background="{DynamicResource Brush.Surface.Tertiary}" 
+                                                Foreground="{DynamicResource Brush.Text.Primary}" 
+                                                Padding="14,6" Margin="0,0,8,0" BorderThickness="0" Cursor="Hand">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="4"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+
+                                        <Button Content="{Binding UpdateButtonLabel, FallbackValue='Install Update'}" 
+                                                Command="{Binding InstallUpdateCommand}" 
+                                                Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVis}}"
+                                                Background="{DynamicResource Brush.UA.Red}" 
+                                                Foreground="#FFFFFF" FontWeight="Bold"
+                                                Padding="16,6" Margin="0,0,8,0" BorderThickness="0" Cursor="Hand">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="4"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- About Section -->
+                            <Border Background="{DynamicResource Brush.Surface.Secondary}" 
+                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
+                                    CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <!-- App Header with Logo -->
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Column="0" Width="44" Height="44" CornerRadius="8" 
+                                                Background="{DynamicResource Brush.Surface.Tertiary}" 
+                                                Margin="0,0,14,0" VerticalAlignment="Center">
+                                            <Image Source="/Assets/img/ualogo.png" Width="34" Height="34" 
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Arizona Admissions Launcher" FontWeight="Bold" 
+                                                       Foreground="{DynamicResource Brush.Text.Primary}" FontSize="14"/>
+                                            <TextBlock Text="University of Arizona &#x2022; Enrollment Management" 
+                                                       Foreground="{DynamicResource Brush.UA.Sky}" FontSize="11" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Version & Developer Specifications Grid -->
+                                    <Border Background="{DynamicResource Brush.Surface.Primary}" 
+                                            BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
+                                            CornerRadius="6" Padding="12,10" Margin="0,0,0,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                                <TextBlock Text="Application Version" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="10"/>
+                                                <TextBlock Text="{Binding AppVersionDisplay}" Foreground="{DynamicResource Brush.Text.Primary}" 
+                                                           FontSize="12" FontWeight="SemiBold"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                                                <TextBlock Text="Build Version" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="10"/>
+                                                <TextBlock Text="{Binding FileVersionDisplay}" Foreground="{DynamicResource Brush.Text.Primary}" 
+                                                           FontSize="12" FontWeight="SemiBold"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Developer" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="10"/>
+                                                <TextBlock Text="{Binding DeveloperName}" Foreground="{DynamicResource Brush.UA.Sky}" 
+                                                           FontSize="12" FontWeight="SemiBold"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Footer Actions and Developer Credit -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Button Grid.Column="0" Content="GitHub Repository" 
+                                                Command="{Binding OpenGitHubCommand}" 
+                                                Background="{DynamicResource Brush.Surface.Tertiary}" 
+                                                Foreground="{DynamicResource Brush.Text.Primary}" 
+                                                Padding="12,6" BorderThickness="0" Cursor="Hand">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="4"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+
+                                        <TextBlock Grid.Column="1" Text="{Binding DeveloperCredit}" 
+                                                   Foreground="{DynamicResource Brush.Text.Muted}" FontSize="11" 
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
                             <!-- Layout Backup Section -->
                             <Border Background="{DynamicResource Brush.Surface.Secondary}" 
                                     BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
@@ -167,12 +398,12 @@
                                                Foreground="{DynamicResource Brush.Text.Muted}" FontSize="11" Margin="0,2,0,12"/>
 
                                     <WrapPanel>
-                                        <Button Content="Backup Layout to File…" 
+                                        <Button Content="Backup Layout to File&#x2026;" 
                                                 Command="{Binding ExportLayoutCommand}" 
                                                 Background="{DynamicResource Brush.Surface.Tertiary}" 
                                                 Foreground="{DynamicResource Brush.Text.Primary}" 
                                                 Padding="12,6" Margin="0,0,8,8" BorderThickness="0" Cursor="Hand"/>
-                                        <Button Content="Restore Layout from File…" 
+                                        <Button Content="Restore Layout from File&#x2026;" 
                                                 Command="{Binding ImportLayoutCommand}" 
                                                 Background="{DynamicResource Brush.Surface.Tertiary}" 
                                                 Foreground="{DynamicResource Brush.Text.Primary}" 
