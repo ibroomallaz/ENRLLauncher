@@ -82,16 +82,17 @@ public partial class MainWindow
         var storageService = new JsonStorageService();
         var layoutService = new LayoutService(storageService);
         var settingsService = new SettingsService(storageService);
+        var securityService = new SecurityService();
         var launcherService = new LauncherService();
         var fileDialogService = new FileDialogService();
 
         var homeVM = new HomeViewModel(launcherService, fileDialogService, layoutService, appStateService);
-        var settingsVM = new SettingsViewModel(settingsService, fileDialogService, storageService);
+        var settingsVM = new SettingsViewModel(settingsService, fileDialogService, storageService, securityService);
         var httpService = new HttpService();
         var updaterService = new UpdaterService(null, httpService);
         var versionCheckerUi = new VersionCheckerUI(httpService, updaterService);
 
-        DataContext = new MainWindowViewModel(homeVM, settingsVM, appStateService, versionCheckerUi);
+        DataContext = new MainWindowViewModel(homeVM, settingsVM, appStateService, securityService, versionCheckerUi);
     }
 
     public MainWindow(MainWindowViewModel viewModel)

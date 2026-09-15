@@ -7,6 +7,8 @@ using ENRLLauncher.Core.Services;
 using ENRLLauncher.Core.Utilities;
 using ENRLLauncher.MVVM.Model;
 using ENRLLauncher.MVVM.Model.Schema;
+using ENRLLauncher.MVVM.View.Dialogs;
+using ENRLLauncher.MVVM.ViewModel.Dialogs;
 
 namespace ENRLLauncher.MVVM.ViewModel;
 
@@ -14,6 +16,7 @@ public class MainWindowViewModel : ObservableObject
 {
     private readonly VersionCheckerUI _versionCheckerUi;
     private readonly IAppStateService _appStateService;
+    private readonly ISecurityService _securityService;
     private readonly IAppLogger? _logger;
     private readonly DispatcherTimer _clockTimer;
 
@@ -62,27 +65,13 @@ public class MainWindowViewModel : ObservableObject
     public string VersionDisplayText
     {
         get => _versionDisplayText;
-        private set
-        {
-            if (_versionDisplayText != value)
-            {
-                _versionDisplayText = value;
-                OnPropertyChanged();
-            }
-        }
+        private set => Set(ref _versionDisplayText, value);
     }
 
     public string VersionToolTip
     {
         get => _versionToolTip;
-        private set
-        {
-            if (_versionToolTip != value)
-            {
-                _versionToolTip = value;
-                OnPropertyChanged();
-            }
-        }
+        private set => Set(ref _versionToolTip, value);
     }
 
     public object CurrentView
@@ -90,11 +79,11 @@ public class MainWindowViewModel : ObservableObject
         get => _currentView;
         set
         {
-            if (_currentView != value)
+            if (Set(ref _currentView, value))
             {
-                _currentView = value;
-                OnPropertyChanged();
-                _appStateService.IsHomeViewActive = _currentView is HomeViewModel;
+                _appStateService.IsHomeViewActive = value == HomeVM;
+                OnPropertyChanged(nameof(IsHomeViewActive));
+                OnPropertyChanged(nameof(IsSettingsViewActive));
             }
         }
     }
@@ -102,44 +91,40 @@ public class MainWindowViewModel : ObservableObject
     public string CurrentTime
     {
         get => _currentTime;
-        set
-        {
-            if (_currentTime != value)
-            {
-                _currentTime = value;
-                OnPropertyChanged();
-            }
-        }
+        private set => Set(ref _currentTime, value);
+    }
+
+    public bool IsCompactMode
+    {
+        get => _isCompactMode;
+        set => Set(ref _isCompactMode, value);
     }
 
     public bool IsEditMode
     {
         get => _appStateService.IsEditMode;
-        set => _appStateService.IsEditMode = value;
-    }
-
-    public bool IsHomeViewActive => _appStateService.IsHomeViewActive;
-    public bool IsEditModeButtonVisible => _appStateService.IsHomeViewActive;
-    public bool IsEditModeControlsVisible => _appStateService.IsEditMode && _appStateService.IsHomeViewActive;
-
-    private bool IsCompactMode
-    {
-        get => _isCompactMode;
         set
         {
-            if (_isCompactMode != value)
+            if (_appStateService.IsEditMode != value)
             {
-                _isCompactMode = value;
+                _appStateService.IsEditMode = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(IsEditModeControlsVisible));
             }
         }
     }
+
+    public bool IsHomeViewActive => _appStateService.IsHomeViewActive;
+    public bool IsSettingsViewActive => CurrentView == SettingsVM;
+    public bool IsEditModeButtonVisible => _appStateService.IsHomeViewActive;
+    public bool IsEditModeControlsVisible => _appStateService.IsHomeViewActive && _appStateService.IsEditMode;
 
     public ICommand NavigateHomeCommand { get; }
     public ICommand NavigateSettingsCommand { get; }
     public ICommand ToggleEditModeCommand { get; }
     public ICommand ToggleCompactModeCommand { get; }
     public ICommand CheckUpdateCommand { get; }
+
     public ICommand AddHorizontalSeparatorCommand { get; }
     public ICommand AddLongVerticalSeparatorCommand { get; }
     public ICommand AddShortVerticalSeparatorCommand { get; }
@@ -148,12 +133,14 @@ public class MainWindowViewModel : ObservableObject
         HomeViewModel homeVM,
         SettingsViewModel settingsVM,
         IAppStateService appStateService,
+        ISecurityService securityService,
         VersionCheckerUI? versionCheckerUi = null,
         IAppLogger? logger = null)
     {
         HomeVM = homeVM ?? throw new ArgumentNullException(nameof(homeVM));
         SettingsVM = settingsVM ?? throw new ArgumentNullException(nameof(settingsVM));
         _appStateService = appStateService ?? throw new ArgumentNullException(nameof(appStateService));
+        _securityService = securityService ?? throw new ArgumentNullException(nameof(securityService));
         _versionCheckerUi = versionCheckerUi ?? new VersionCheckerUI(new HttpService(), new UpdaterService());
         _logger = logger;
         _currentView = HomeVM;
@@ -188,7 +175,7 @@ public class MainWindowViewModel : ObservableObject
 
         NavigateHomeCommand = new RelayCommand(_ => CurrentView = HomeVM);
         NavigateSettingsCommand = new RelayCommand(_ => CurrentView = SettingsVM);
-        ToggleEditModeCommand = new RelayCommand(_ => IsEditMode = !IsEditMode);
+        ToggleEditModeCommand = new RelayCommand(_ => ExecuteToggleEditMode());
         ToggleCompactModeCommand = new RelayCommand(_ => IsCompactMode = !IsCompactMode);
         CheckUpdateCommand = new RelayCommand(_ => ExecuteCheckUpdate(), _ => !IsCheckingForUpdates);
 
@@ -282,6 +269,40 @@ public class MainWindowViewModel : ObservableObject
         finally
         {
             UpdateVersionDisplay();
+        }
+    }
+
+    // Toggles edit mode state, enforcing PIN security when enabled
+    private void ExecuteToggleEditMode()
+    {
+        // Exiting edit mode is always permitted without PIN prompt
+        if (IsEditMode)
+        {
+            IsEditMode = false;
+            return;
+        }
+
+        // When PIN lock is enabled and configured, require authentication
+        if (_securityService.IsPinLockEnabled && _securityService.HasPinSet)
+        {
+            var dialogVm = new PinPromptDialogViewModel(_securityService, PinDialogMode.Verify, _logger);
+            var dialog = new PinPromptDialog
+            {
+                DataContext = dialogVm,
+                Owner = Application.Current?.MainWindow
+            };
+
+            dialogVm.RequestClose += () => dialog.Close();
+            dialog.ShowDialog();
+
+            if (dialogVm.Success)
+            {
+                IsEditMode = true;
+            }
+        }
+        else
+        {
+            IsEditMode = true;
         }
     }
 }

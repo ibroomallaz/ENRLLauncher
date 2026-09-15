@@ -1,10 +1,13 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Windows;
 using System.Windows.Input;
 using ENRLLauncher.Core.Interfaces;
 using ENRLLauncher.Core.Utilities;
 using ENRLLauncher.MVVM.Model;
 using ENRLLauncher.MVVM.Model.Schema;
+using ENRLLauncher.MVVM.View.Dialogs;
+using ENRLLauncher.MVVM.ViewModel.Dialogs;
 
 namespace ENRLLauncher.MVVM.ViewModel
 {
@@ -14,10 +17,12 @@ namespace ENRLLauncher.MVVM.ViewModel
         private readonly ISettingsService _settingsService;
         private readonly IFileDialogService _fileDialogService;
         private readonly IJsonStorageService _storageService;
+        private readonly ISecurityService _securityService;
         private readonly IAppLogger? _logger;
 
         private bool _startInFullScreen;
         private bool _launchOnWindowsStartup;
+        private bool _requirePinForEditMode;
         private bool _hasUnsavedChanges;
         private bool _isSaving;
         private string _statusMessage = "Ready";
@@ -53,6 +58,20 @@ namespace ENRLLauncher.MVVM.ViewModel
             }
         }
 
+        public bool RequirePinForEditMode
+        {
+            get => _requirePinForEditMode;
+            set
+            {
+                if (_requirePinForEditMode != value)
+                {
+                    HandlePinToggleRequest(value);
+                }
+            }
+        }
+
+        public bool HasPinConfigured => _securityService.HasPinSet;
+
         public bool HasUnsavedChanges
         {
             get => _hasUnsavedChanges;
@@ -85,16 +104,19 @@ namespace ENRLLauncher.MVVM.ViewModel
         public ICommand RestoreAutoBackupCommand { get; }
         public ICommand OpenAppDataFolderCommand { get; }
         public ICommand OpenLogsFolderCommand { get; }
+        public ICommand ChangePinCommand { get; }
 
         public SettingsViewModel(
             ISettingsService settingsService,
             IFileDialogService fileDialogService,
             IJsonStorageService storageService,
+            ISecurityService securityService,
             IAppLogger? logger = null)
         {
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
             _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
+            _securityService = securityService ?? throw new ArgumentNullException(nameof(securityService));
             _logger = logger;
 
             SaveSettingsCommand = new RelayCommand(_ => TriggerDebouncedSave(), _ => !IsSaving);
@@ -103,6 +125,7 @@ namespace ENRLLauncher.MVVM.ViewModel
             RestoreAutoBackupCommand = new RelayCommand(_ => ExecuteRestoreAutoBackup());
             OpenAppDataFolderCommand = new RelayCommand(_ => OpenFolder(Globals.g_AppDir));
             OpenLogsFolderCommand = new RelayCommand(_ => OpenFolder(Globals.g_LogsDir));
+            ChangePinCommand = new RelayCommand(_ => ExecuteChangePin(), _ => RequirePinForEditMode);
 
             _ = LoadInitialSettingsAsync();
         }
@@ -119,8 +142,12 @@ namespace ENRLLauncher.MVVM.ViewModel
                 var isRegistryStartup = _settingsService.IsWindowsStartupEnabled();
                 _launchOnWindowsStartup = isRegistryStartup || settings.LaunchOnWindowsStartup;
 
+                _requirePinForEditMode = _securityService.IsPinLockEnabled;
+
                 OnPropertyChanged(nameof(StartInFullScreen));
                 OnPropertyChanged(nameof(LaunchOnWindowsStartup));
+                OnPropertyChanged(nameof(RequirePinForEditMode));
+                OnPropertyChanged(nameof(HasPinConfigured));
                 HasUnsavedChanges = false;
                 StatusMessage = "Settings loaded";
             }
@@ -128,6 +155,102 @@ namespace ENRLLauncher.MVVM.ViewModel
             {
                 _logger?.Error(nameof(SettingsViewModel), "Error loading initial settings", ex);
                 StatusMessage = "Error loading settings";
+            }
+        }
+
+        // Handles requests to enable or disable the edit mode PIN requirement
+        private void HandlePinToggleRequest(bool enable)
+        {
+            if (enable)
+            {
+                // If a PIN is already configured in the registry, simply enable it
+                if (_securityService.HasPinSet)
+                {
+                    _securityService.SetPinLockEnabled(true);
+                    Set(ref _requirePinForEditMode, true);
+                    OnPropertyChanged(nameof(HasPinConfigured));
+                    StatusMessage = "PIN protection enabled";
+                    return;
+                }
+
+                // Prompt user to create a new PIN
+                var dialogVm = new PinPromptDialogViewModel(_securityService, PinDialogMode.Setup, _logger);
+                var dialog = new PinPromptDialog
+                {
+                    DataContext = dialogVm,
+                    Owner = Application.Current?.MainWindow
+                };
+
+                dialogVm.RequestClose += () => dialog.Close();
+                dialog.ShowDialog();
+
+                if (dialogVm.Success)
+                {
+                    Set(ref _requirePinForEditMode, true);
+                    OnPropertyChanged(nameof(HasPinConfigured));
+                    StatusMessage = "PIN configured and enabled";
+                }
+                else
+                {
+                    // Revert checkbox state
+                    OnPropertyChanged(nameof(RequirePinForEditMode));
+                }
+            }
+            else
+            {
+                // Disabling requires verification of current PIN or Windows Administrator
+                var dialogVm = new PinPromptDialogViewModel(_securityService, PinDialogMode.Verify, _logger);
+                var dialog = new PinPromptDialog
+                {
+                    DataContext = dialogVm,
+                    Owner = Application.Current?.MainWindow
+                };
+
+                dialogVm.RequestClose += () => dialog.Close();
+                dialog.ShowDialog();
+
+                if (dialogVm.Success)
+                {
+                    _securityService.SetPinLockEnabled(false);
+                    Set(ref _requirePinForEditMode, false);
+                    OnPropertyChanged(nameof(HasPinConfigured));
+                    StatusMessage = "PIN protection disabled";
+                }
+                else
+                {
+                    // Revert checkbox state
+                    OnPropertyChanged(nameof(RequirePinForEditMode));
+                }
+            }
+        }
+
+        // Prompts user to change or update existing PIN
+        private void ExecuteChangePin()
+        {
+            var dialogVm = new PinPromptDialogViewModel(_securityService, PinDialogMode.Change, _logger);
+            var dialog = new PinPromptDialog
+            {
+                DataContext = dialogVm,
+                Owner = Application.Current?.MainWindow
+            };
+
+            dialogVm.RequestClose += () => dialog.Close();
+            dialog.ShowDialog();
+
+            if (dialogVm.Success)
+            {
+                if (dialogVm.WasPinCleared)
+                {
+                    Set(ref _requirePinForEditMode, false);
+                    StatusMessage = "PIN removed and disabled";
+                }
+                else
+                {
+                    Set(ref _requirePinForEditMode, true);
+                    StatusMessage = "PIN updated successfully";
+                }
+                OnPropertyChanged(nameof(RequirePinForEditMode));
+                OnPropertyChanged(nameof(HasPinConfigured));
             }
         }
 

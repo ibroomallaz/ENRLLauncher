@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Security.Principal;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using ENRLLauncher.Core.Enums;
@@ -34,6 +35,7 @@ public partial class App
         services.AddSingleton<VersionCheckerUI>();
         services.AddSingleton<ILayoutService, LayoutService>();
         services.AddSingleton<ISettingsService, SettingsService>();
+        services.AddSingleton<ISecurityService, SecurityService>();
         services.AddSingleton<ILauncherService, LauncherService>();
         services.AddSingleton<IFileDialogService, FileDialogService>();
 
@@ -49,6 +51,15 @@ public partial class App
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // Fast-path for UAC Administrator credential verification helper
+        if (e.Args.Length > 0 && e.Args.Contains("--verify-admin"))
+        {
+            var isElevated = new WindowsPrincipal(WindowsIdentity.GetCurrent())
+                .IsInRole(WindowsBuiltInRole.Administrator);
+            Environment.Exit(isElevated ? 0 : 1);
+            return;
+        }
 
         // 1. Display Splash Screen
         _splash = new SplashWindow();
