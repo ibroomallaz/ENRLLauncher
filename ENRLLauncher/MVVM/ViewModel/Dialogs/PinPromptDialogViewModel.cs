@@ -108,6 +108,7 @@ public sealed class PinPromptDialogViewModel : ObservableObject
     public bool Success { get; private set; }
     public bool WasPinCleared { get; private set; }
     public bool WasPinUpdated { get; private set; }
+    public bool WasAdminUnlocked { get; private set; }
 
     // Commands
     public ICommand CloseCommand { get; }
@@ -178,13 +179,14 @@ public sealed class PinPromptDialogViewModel : ObservableObject
 
         if (_securityService.VerifyPin(pin))
         {
+            _logger?.Write(AppLogLevel.Info, "PinPromptDialogVM", "PIN verified successfully.");
             Success = true;
             CloseDialog(true);
             return true;
         }
 
         ErrorMessage = "Incorrect PIN. Please try again.";
-        _logger?.Write(AppLogLevel.Warning, "Security", "Incorrect PIN attempt");
+        _logger?.Write(AppLogLevel.Warning, "PinPromptDialogVM", "Incorrect PIN attempt.");
         return false;
     }
 
@@ -211,6 +213,7 @@ public sealed class PinPromptDialogViewModel : ObservableObject
 
         if (_securityService.SetPin(newPin))
         {
+            _logger?.Write(AppLogLevel.Info, "PinPromptDialogVM", "New PIN setup successful.");
             _securityService.SetPinLockEnabled(true);
             Success = true;
             WasPinUpdated = true;
@@ -218,6 +221,7 @@ public sealed class PinPromptDialogViewModel : ObservableObject
             return true;
         }
 
+        _logger?.Write(AppLogLevel.Error, "PinPromptDialogVM", "Failed to save new PIN.");
         ErrorMessage = "Failed to save PIN. Please try again.";
         return false;
     }
@@ -233,6 +237,7 @@ public sealed class PinPromptDialogViewModel : ObservableObject
 
         if (!_securityService.VerifyPin(currentPin))
         {
+            _logger?.Write(AppLogLevel.Warning, "PinPromptDialogVM", "Incorrect current PIN during change attempt.");
             ErrorMessage = "Current PIN is incorrect.";
             return false;
         }
@@ -257,6 +262,7 @@ public sealed class PinPromptDialogViewModel : ObservableObject
 
         if (_securityService.SetPin(newPin))
         {
+            _logger?.Write(AppLogLevel.Info, "PinPromptDialogVM", "PIN changed successfully.");
             _securityService.SetPinLockEnabled(true);
             Success = true;
             WasPinUpdated = true;
@@ -264,6 +270,7 @@ public sealed class PinPromptDialogViewModel : ObservableObject
             return true;
         }
 
+        _logger?.Write(AppLogLevel.Error, "PinPromptDialogVM", "Failed to update PIN.");
         ErrorMessage = "Failed to update PIN. Please try again.";
         return false;
     }
@@ -277,11 +284,15 @@ public sealed class PinPromptDialogViewModel : ObservableObject
             BusyMessage = "Verifying admin credentials…";
             ErrorMessage = string.Empty;
 
+            _logger?.Write(AppLogLevel.Info, "PinPromptDialogVM", "User triggered Admin elevation override.");
+
             var isAdmin = await _securityService.VerifyAdminCredentialsAsync();
+
+            _logger?.Write(AppLogLevel.Info, "PinPromptDialogVM", $"Admin elevation check completed. isAdmin={isAdmin}");
 
             if (isAdmin)
             {
-                _logger?.Write(AppLogLevel.Info, "Security", "Windows Admin elevation verified successfully");
+                _logger?.Write(AppLogLevel.Info, "PinPromptDialogVM", "Windows Admin elevation verified successfully. Switching to AdminVerified mode.");
                 Mode = PinDialogMode.AdminVerified;
             }
             else
@@ -291,7 +302,7 @@ public sealed class PinPromptDialogViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _logger?.Write(AppLogLevel.Error, "Security", $"Admin elevation error: {ex.Message}");
+            _logger?.Write(AppLogLevel.Error, "PinPromptDialogVM", $"Admin elevation error: {ex.Message}", ex);
             ErrorMessage = "Admin verification failed. Please try again.";
         }
         finally
@@ -303,15 +314,17 @@ public sealed class PinPromptDialogViewModel : ObservableObject
     // Admin option: unlock edit mode for current session without modifying stored PIN
     private void ExecuteAdminUnlockOnly()
     {
+        _logger?.Write(AppLogLevel.Info, "PinPromptDialogVM", "Admin option selected: Session unlock only.");
         Success = true;
+        WasAdminUnlocked = true;
         CloseDialog(true);
     }
 
     // Admin option: remove PIN and disable requirement
     private void ExecuteAdminDisablePin()
     {
+        _logger?.Write(AppLogLevel.Info, "PinPromptDialogVM", "Admin option selected: Remove and disable PIN.");
         _securityService.ClearPin();
-        _securityService.SetPinLockEnabled(false);
         Success = true;
         WasPinCleared = true;
         CloseDialog(true);

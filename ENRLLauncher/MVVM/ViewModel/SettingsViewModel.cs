@@ -239,7 +239,7 @@ namespace ENRLLauncher.MVVM.ViewModel
             IsCheckingForUpdates = isChecking;
             if (isChecking)
             {
-                UpdateStatusMessage = "Checking remote repository for updates\u2026";
+                UpdateStatusMessage = "Checking remote repository for updates…";
             }
         }
 
@@ -350,7 +350,7 @@ namespace ENRLLauncher.MVVM.ViewModel
         {
             if (enable)
             {
-                // If a PIN is already configured in the registry, simply enable it
+                // If a PIN is already configured in the registry, enable it
                 if (_securityService.HasPinSet)
                 {
                     _securityService.SetPinLockEnabled(true);
@@ -398,10 +398,10 @@ namespace ENRLLauncher.MVVM.ViewModel
 
                 if (dialogVm.Success)
                 {
-                    _securityService.SetPinLockEnabled(false);
+                    _securityService.ClearPin();
                     Set(ref _requirePinForEditMode, false);
                     OnPropertyChanged(nameof(HasPinConfigured));
-                    StatusMessage = "PIN protection disabled";
+                    StatusMessage = "PIN protection disabled and cleared";
                 }
                 else
                 {
@@ -450,7 +450,7 @@ namespace ENRLLauncher.MVVM.ViewModel
             var token = _saveDebounceCts.Token;
 
             IsSaving = true;
-            StatusMessage = "Saving changes\u2026";
+            StatusMessage = "Saving changes…";
 
             Task.Delay(400, token).ContinueWith(async task =>
             {

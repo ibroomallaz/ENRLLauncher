@@ -191,7 +191,7 @@ namespace ENRLLauncher.Core.Logging
             try
             {
                 var path = Path.Combine(_dir, $"app-{_dayUtc:yyyyMMdd}.log");
-                _writer = new StreamWriter(new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read), Encoding.UTF8)
+                _writer = new StreamWriter(new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), Encoding.UTF8)
                 {
                     AutoFlush = true
                 };
@@ -249,7 +249,9 @@ namespace ENRLLauncher.Core.Logging
             try
             {
                 var path = Path.Combine(_dir, $"app-{_dayUtc:yyyyMMdd}.log");
-                File.AppendAllText(path, line, Encoding.UTF8);
+                using var fs = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+                using var sw = new StreamWriter(fs, Encoding.UTF8);
+                sw.Write(line);
             }
             catch
             {

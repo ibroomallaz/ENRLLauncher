@@ -1,5 +1,8 @@
 ﻿using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
+using System.Threading;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using ENRLLauncher.Core.Enums;
@@ -13,10 +16,24 @@ using ENRLLauncher.MVVM.ViewModel;
 
 namespace ENRLLauncher;
 
-public partial class App
+public partial class App : Application
 {
+    private const string AppMutexName = @"Local\ENRLLauncher_SingleInstance_Mutex";
+    private const int SW_RESTORE = 9;
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    private static extern bool IsIconic(IntPtr hWnd);
+
     private SplashWindow? _splash;
     private IAppLogger? _logger;
+    private Mutex? _singleInstanceMutex;
+    private bool _hasMutexOwnership;
 
     public static IServiceProvider Services { get; private set; } = null!;
 
@@ -53,11 +70,125 @@ public partial class App
         base.OnStartup(e);
 
         // Fast-path for UAC Administrator credential verification helper
-        if (e.Args.Length > 0 && e.Args.Contains("--verify-admin"))
+        var allArgs = Environment.GetCommandLineArgs();
+        int verifyIndex = -1;
+        for (int i = 0; i < allArgs.Length; i++)
         {
-            var isElevated = new WindowsPrincipal(WindowsIdentity.GetCurrent())
-                .IsInRole(WindowsBuiltInRole.Administrator);
-            Environment.Exit(isElevated ? 0 : 1);
+            if (string.Equals(allArgs[i], "--verify-admin", StringComparison.OrdinalIgnoreCase))
+            {
+                verifyIndex = i;
+                break;
+            }
+        }
+
+        if (verifyIndex >= 0)
+        {
+            string? token = (verifyIndex + 1 < allArgs.Length && !allArgs[verifyIndex + 1].StartsWith('-'))
+                ? allArgs[verifyIndex + 1]
+                : null;
+            string? authFilePath = (verifyIndex + 2 < allArgs.Length && !allArgs[verifyIndex + 2].StartsWith('-'))
+                ? allArgs[verifyIndex + 2]
+                : null;
+
+            int exitCode = 1;
+            try
+            {
+                var identity = WindowsIdentity.GetCurrent();
+                var principal = new WindowsPrincipal(identity);
+                bool isElevated = principal.IsInRole(WindowsBuiltInRole.Administrator);
+                exitCode = isElevated ? 0 : 1;
+
+                if (isElevated)
+                {
+                    // 1. Signal synchronization event if token was supplied
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        try
+                        {
+                            if (EventWaitHandle.TryOpenExisting($@"Global\ENRL_AdminAuth_{token}", out var evGlobal))
+                            {
+                                evGlobal.Set();
+                                evGlobal.Dispose();
+                            }
+                        }
+                        catch { /* ignore */ }
+
+                        try
+                        {
+                            if (EventWaitHandle.TryOpenExisting($@"Local\ENRL_AdminAuth_{token}", out var evLocal))
+                            {
+                                evLocal.Set();
+                                evLocal.Dispose();
+                            }
+                        }
+                        catch { /* ignore */ }
+                    }
+
+                    // 2. Write authentication receipt file if requested
+                    if (!string.IsNullOrEmpty(authFilePath))
+                    {
+                        try
+                        {
+                            var targetDir = Path.GetDirectoryName(authFilePath);
+                            if (!string.IsNullOrEmpty(targetDir))
+                            {
+                                Directory.CreateDirectory(targetDir);
+                            }
+                            File.WriteAllText(authFilePath, $"VERIFIED:{identity.Name}:{DateTime.UtcNow:O}");
+                        }
+                        catch { /* ignore */ }
+                    }
+                }
+
+                try
+                {
+                    if (StorageBootstrapper.TryEnsureCoreDirs(out _))
+                    {
+                        using var fastLogger = new FileLogger(Globals.g_LogsDir);
+                        fastLogger.Write(AppLogLevel.Info, "VerifyAdmin",
+                            $"Elevation check helper running as '{identity.Name}'. IsInRole(Administrator)={isElevated}, Exiting with code {exitCode}");
+                    }
+                }
+                catch
+                {
+                    // Ignore logger issues in fast-path
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    if (StorageBootstrapper.TryEnsureCoreDirs(out _))
+                    {
+                        using var fastLogger = new FileLogger(Globals.g_LogsDir);
+                        fastLogger.Write(AppLogLevel.Error, "VerifyAdmin", $"Exception during admin role check: {ex.Message}", ex);
+                    }
+                }
+                catch
+                {
+                    // Ignore logger issues in fast-path
+                }
+            }
+
+            Environment.Exit(exitCode);
+            return;
+        }
+
+        // Enforce single running application instance
+        try
+        {
+            _singleInstanceMutex = new Mutex(true, AppMutexName, out _hasMutexOwnership);
+        }
+        catch (Exception)
+        {
+            // If mutex instantiation fails unexpectedly, allow the application to proceed
+            _hasMutexOwnership = true;
+        }
+
+        if (!_hasMutexOwnership)
+        {
+            BringExistingInstanceToFront();
+            Shutdown();
             return;
         }
 
@@ -192,16 +323,57 @@ public partial class App
         Mark("Window shown");
     }
 
+    private static void BringExistingInstanceToFront()
+    {
+        try
+        {
+            var current = Process.GetCurrentProcess();
+            var existingProcess = Process.GetProcessesByName(current.ProcessName)
+                .FirstOrDefault(p => p.Id != current.Id);
+
+            if (existingProcess != null && existingProcess.MainWindowHandle != IntPtr.Zero)
+            {
+                var handle = existingProcess.MainWindowHandle;
+                if (IsIconic(handle))
+                {
+                    ShowWindow(handle, SW_RESTORE);
+                }
+                SetForegroundWindow(handle);
+            }
+        }
+        catch
+        {
+            // Ignore failure when finding or focusing existing process
+        }
+    }
+
     protected override void OnExit(ExitEventArgs e)
     {
         _logger?.Write(AppLogLevel.Info, "Shutdown", "App shutting down");
+
+        if (_singleInstanceMutex != null)
+        {
+            if (_hasMutexOwnership)
+            {
+                try
+                {
+                    _singleInstanceMutex.ReleaseMutex();
+                }
+                catch (ApplicationException)
+                {
+                    // Ignore if mutex was not acquired or already released
+                }
+            }
+            _singleInstanceMutex.Dispose();
+            _singleInstanceMutex = null;
+        }
 
         if (_logger is FileLogger fl)
         {
             fl.Dispose();
         }
 
-        if (Services.GetService<IHttpService>() is IDisposable http)
+        if (Services?.GetService<IHttpService>() is IDisposable http)
         {
             http.Dispose();
         }
