@@ -13,12 +13,26 @@ namespace ENRLLauncher.Core.Logging
         private string _dir;
         private DateTime _dayUtc;
         private StreamWriter? _writer;
+        private AppLogLevel _minimumLevel = AppLogLevel.Info;
 
         // Cleanup is disabled until settings specify retention.
         private bool _cleanupEnabled;
 
         // Expose where logs are written.
         public string DirectoryPath => _dir;
+
+        // Minimum log severity required for emission
+        public AppLogLevel MinimumLevel
+        {
+            get
+            {
+                lock (_sync) return _minimumLevel;
+            }
+            set
+            {
+                lock (_sync) _minimumLevel = value;
+            }
+        }
 
         public FileLogger(string preferredDir, int retentionDays = 14)
         {
@@ -32,6 +46,14 @@ namespace ENRLLauncher.Core.Logging
 
         public void Write(AppLogLevel level, string tag, string message, Exception? ex = null)
         {
+            lock (_sync)
+            {
+                if (_minimumLevel == AppLogLevel.Off || level == AppLogLevel.Off || level < _minimumLevel)
+                {
+                    return;
+                }
+            }
+
             var now = DateTime.UtcNow;
 
             var sb = new StringBuilder()

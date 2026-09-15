@@ -4,6 +4,9 @@ namespace ENRLLauncher.Core.Interfaces;
 
 public interface IAppLogger
 {
+    // Minimum log level threshold for emission
+    AppLogLevel MinimumLevel { get; set; }
+
     // Core sink required by implementations
     void Write(AppLogLevel level, string tag, string message, Exception? ex = null);
 
@@ -15,6 +18,12 @@ public interface IAppLogger
         Write(level, tag, message, ex);
 
     // Convenience level helpers
+    void Debug(string message) =>
+        Write(AppLogLevel.Debug, "General", message);
+
+    void Debug(string tag, string message) =>
+        Write(AppLogLevel.Debug, tag, message);
+
     void Info(string message) =>
         Write(AppLogLevel.Info, "General", message);
 

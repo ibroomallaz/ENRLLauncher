@@ -26,6 +26,7 @@ namespace ENRLLauncher.MVVM.ViewModel
         private bool _startInFullScreen;
         private bool _launchOnWindowsStartup;
         private bool _requirePinForEditMode;
+        private AppLogLevel _selectedLogLevel = AppLogLevel.Info;
         private bool _hasUnsavedChanges;
         private bool _isSaving;
         private string _statusMessage = "Ready";
@@ -67,6 +68,43 @@ namespace ENRLLauncher.MVVM.ViewModel
                 }
             }
         }
+
+        public AppLogLevel SelectedLogLevel
+        {
+            get => _selectedLogLevel;
+            set
+            {
+                if (Set(ref _selectedLogLevel, value))
+                {
+                    if (_logger != null)
+                    {
+                        _logger.MinimumLevel = value;
+                    }
+                    OnPropertyChanged(nameof(LogLevelDescription));
+                    HasUnsavedChanges = true;
+                    StatusMessage = "Unsaved changes";
+                }
+            }
+        }
+
+        public IReadOnlyList<AppLogLevel> AvailableLogLevels { get; } =
+        [
+            AppLogLevel.Debug,
+            AppLogLevel.Info,
+            AppLogLevel.Warning,
+            AppLogLevel.Error,
+            AppLogLevel.Off
+        ];
+
+        public string LogLevelDescription => SelectedLogLevel switch
+        {
+            AppLogLevel.Debug => "Captures all diagnostic traces, startup timers, and internal operations.",
+            AppLogLevel.Info => "Logs standard application lifecycle and key operations (Recommended).",
+            AppLogLevel.Warning => "Only captures warnings, recoverable anomalies, and critical errors.",
+            AppLogLevel.Error => "Only records fatal failures and unhandled exceptions.",
+            AppLogLevel.Off => "Disables all file logging output completely.",
+            _ => string.Empty
+        };
 
         public bool RequirePinForEditMode
         {
@@ -329,10 +367,18 @@ namespace ENRLLauncher.MVVM.ViewModel
                 var isRegistryStartup = _settingsService.IsWindowsStartupEnabled();
                 _launchOnWindowsStartup = isRegistryStartup || settings.LaunchOnWindowsStartup;
 
+                _selectedLogLevel = settings.LogLevel;
+                if (_logger != null)
+                {
+                    _logger.MinimumLevel = _selectedLogLevel;
+                }
+
                 _requirePinForEditMode = _securityService.IsPinLockEnabled;
 
                 OnPropertyChanged(nameof(StartInFullScreen));
                 OnPropertyChanged(nameof(LaunchOnWindowsStartup));
+                OnPropertyChanged(nameof(SelectedLogLevel));
+                OnPropertyChanged(nameof(LogLevelDescription));
                 OnPropertyChanged(nameof(RequirePinForEditMode));
                 OnPropertyChanged(nameof(HasPinConfigured));
                 HasUnsavedChanges = false;
@@ -465,7 +511,8 @@ namespace ENRLLauncher.MVVM.ViewModel
                     var schema = new SettingsSchema
                     {
                         StartInFullScreen = StartInFullScreen,
-                        LaunchOnWindowsStartup = LaunchOnWindowsStartup
+                        LaunchOnWindowsStartup = LaunchOnWindowsStartup,
+                        LogLevel = SelectedLogLevel
                     };
                     await _settingsService.SaveSettingsAsync(schema);
 

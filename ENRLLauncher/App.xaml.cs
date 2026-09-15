@@ -11,6 +11,7 @@ using ENRLLauncher.Core.Logging;
 using ENRLLauncher.Core.Services;
 using ENRLLauncher.Core.Utilities;
 using ENRLLauncher.MVVM.Model;
+using ENRLLauncher.MVVM.Model.Schema;
 using ENRLLauncher.MVVM.View;
 using ENRLLauncher.MVVM.ViewModel;
 
@@ -240,6 +241,22 @@ public partial class App : Application
         // Non-blocking cleanup of previous update temp folders
         _ = Services.GetRequiredService<IUpdaterService>().CleanupOldUpdatesAsync();
 
+        // Apply persisted settings (log level, etc.)
+        SettingsSchema? startupSettings = null;
+        try
+        {
+            var settingsService = Services.GetRequiredService<ISettingsService>();
+            startupSettings = await settingsService.LoadSettingsAsync();
+            if (_logger != null && startupSettings != null)
+            {
+                _logger.MinimumLevel = startupSettings.LogLevel;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.Write(AppLogLevel.Warning, "Startup", $"Failed reading initial settings: {ex.Message}");
+        }
+
         // 4. Update Check on Splash Screen
         Mark("Checking for updates");
         _logger.Write(AppLogLevel.Info, "Startup", "Initiating update check on splash screen");
@@ -275,18 +292,9 @@ public partial class App : Application
         MainWindow = mainWindow;
 
         // Apply startup window preferences
-        try
+        if (startupSettings?.StartInFullScreen == true)
         {
-            var settingsService = Services.GetRequiredService<ISettingsService>();
-            var settings = await settingsService.LoadSettingsAsync();
-            if (settings?.StartInFullScreen == true)
-            {
-                mainWindow.ApplyFullScreen(true);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger?.Write(AppLogLevel.Warning, "Startup", $"Failed reading startup settings: {ex.Message}");
+            mainWindow.ApplyFullScreen(true);
         }
 
         // 6. Dismiss splash upon first window render and check optional updates

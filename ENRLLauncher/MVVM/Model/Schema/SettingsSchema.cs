@@ -1,4 +1,6 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using ENRLLauncher.Core.Enums;
 
 namespace ENRLLauncher.MVVM.Model.Schema;
 
@@ -14,6 +16,11 @@ public class SettingsSchema : MetaBase
     // When true, launches the app automatically when Windows boots / user logs in
     [JsonProperty("launchOnWindowsStartup")]
     public bool LaunchOnWindowsStartup { get; set; }
+
+    // Minimum severity level required for file logging
+    [JsonProperty("logLevel")]
+    [JsonConverter(typeof(StringEnumConverter))]
+    public AppLogLevel LogLevel { get; set; } = AppLogLevel.Info;
 
     // Reserved for future custom background image path
     [JsonProperty("customBackgroundPath", NullValueHandling = NullValueHandling.Ignore)]
