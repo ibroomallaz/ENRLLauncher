@@ -5,6 +5,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
+using ENRLLauncher.Core.Enums;
 using ENRLLauncher.MVVM.Model;
 using ENRLLauncher.MVVM.View.Adorners;
 using ENRLLauncher.MVVM.ViewModel;
@@ -56,7 +57,7 @@ public partial class HomeView
     {
         if (DataContext is not HomeViewModel { IsEditMode: true } vm) return;
 
-        // Prevent dragging when clicking interactive action buttons (e.g. Delete, Toolbar) or editing text in section headers
+        // Prevent dragging when clicking interactive action buttons (e.g. Delete, Edit, Toolbar) or editing text in section headers
         if (e.OriginalSource is DependencyObject dep)
         {
             var button = FindParent<Button>(dep);
@@ -70,6 +71,18 @@ public partial class HomeView
         var cardBorder = FindCardBorder(e.OriginalSource as DependencyObject);
         if (cardBorder?.DataContext is LaunchItem item)
         {
+            if (e.ClickCount == 2 && item.TargetType is not (LaunchTargetType.HorizontalSeparator
+                                                          or LaunchTargetType.LongVerticalSeparator
+                                                          or LaunchTargetType.ShortVerticalSeparator))
+            {
+                if (vm.EditItemCommand.CanExecute(item))
+                {
+                    vm.EditItemCommand.Execute(item);
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             _dragStartPoint = e.GetPosition(this);
             _draggedCard = cardBorder;
             _draggedItem = item;

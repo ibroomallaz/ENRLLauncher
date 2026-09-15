@@ -9,6 +9,7 @@ public class LaunchItem : ObservableObject
     private Guid _id = Guid.NewGuid();
     private string _title = string.Empty;
     private string _description = string.Empty;
+    private string? _customBadgeText;
     private string _targetPath = string.Empty;
     private string? _arguments;
     private string? _iconPath;
@@ -35,6 +36,25 @@ public class LaunchItem : ObservableObject
         set => Set(ref _description, value);
     }
 
+    public string? CustomBadgeText
+    {
+        get => _customBadgeText;
+        set
+        {
+            if (Set(ref _customBadgeText, value))
+            {
+                OnPropertyChanged(nameof(DisplayBadgeText));
+            }
+        }
+    }
+
+    [JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string DisplayBadgeText =>
+        !string.IsNullOrWhiteSpace(_customBadgeText)
+            ? _customBadgeText
+            : _targetType.ToString();
+
     public string TargetPath
     {
         get => _targetPath;
@@ -56,7 +76,13 @@ public class LaunchItem : ObservableObject
     public LaunchTargetType TargetType
     {
         get => _targetType;
-        set => Set(ref _targetType, value);
+        set
+        {
+            if (Set(ref _targetType, value))
+            {
+                OnPropertyChanged(nameof(DisplayBadgeText));
+            }
+        }
     }
 
     public int SortOrder

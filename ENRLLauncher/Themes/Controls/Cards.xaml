@@ -33,7 +33,39 @@
         </Setter>
     </Style>
 
-    <!-- 2. Launch Card Outer Border Style -->
+    <!-- 2. Reusable Circular Edit Badge -->
+    <Style x:Key="CardEditButtonStyle" TargetType="Button">
+        <Setter Property="Content" Value="✎"/>
+        <Setter Property="Width" Value="20"/>
+        <Setter Property="Height" Value="20"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Background" Value="#1E3A5F"/>
+        <Setter Property="Foreground" Value="#81D3EB"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="ToolTip" Value="Edit Launch Item"/>
+        <Setter Property="Visibility" Value="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}"/>
+        <Setter Property="Command" Value="{Binding DataContext.EditItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+        <Setter Property="CommandParameter" Value="{Binding}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="10">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#378DBD"/>
+                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 3. Launch Card Outer Border Style -->
     <Style x:Key="LaunchCardBorderStyle" TargetType="Border">
         <Setter Property="Width" Value="215"/>
         <Setter Property="Height" Value="150"/>
@@ -61,7 +93,7 @@
         </Style.Triggers>
     </Style>
 
-    <!-- 3. Launch Card Click Button Style -->
+    <!-- 4. Launch Card Click Button Style -->
     <Style x:Key="CardLaunchButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
@@ -93,7 +125,7 @@
         </Style.Triggers>
     </Style>
 
-    <!-- 4. Launch Card Type / Launch State Badge Styles -->
+    <!-- 5. Launch Card Type / Launch State Badge Styles -->
     <Style x:Key="CardBadgeBorderStyle" TargetType="Border">
         <Setter Property="CornerRadius" Value="4"/>
         <Setter Property="Padding" Value="8,3"/>
@@ -110,7 +142,7 @@
     <Style x:Key="CardBadgeTextStyle" TargetType="TextBlock">
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="FontSize" Value="11"/>
-        <Setter Property="Text" Value="{Binding TargetType}"/>
+        <Setter Property="Text" Value="{Binding DisplayBadgeText}"/>
         <Setter Property="Foreground" Value="{DynamicResource Brush.UA.Oasis}"/>
         <Style.Triggers>
             <DataTrigger Binding="{Binding IsLaunching}" Value="True">
@@ -120,7 +152,7 @@
         </Style.Triggers>
     </Style>
 
-    <!-- 5. Launch Card Bottom Indeterminate Progress Bar Style -->
+    <!-- 6. Launch Card Bottom Indeterminate Progress Bar Style -->
     <Style x:Key="CardProgressBarStyle" TargetType="ProgressBar">
         <Setter Property="IsIndeterminate" Value="True"/>
         <Setter Property="Height" Value="4"/>
@@ -132,7 +164,7 @@
         <Setter Property="Visibility" Value="{Binding IsLaunching, Converter={StaticResource BoolToVis}}"/>
     </Style>
 
-    <!-- 6. Explorer Drop Target Border Style -->
+    <!-- 7. Explorer Drop Target Border Style -->
     <Style x:Key="DropZoneCardBorderStyle" TargetType="Border">
         <Setter Property="Width" Value="215"/>
         <Setter Property="Height" Value="150"/>
@@ -149,7 +181,7 @@
         </Style.Triggers>
     </Style>
 
-    <!-- 7. Explorer Drop Target Button Style -->
+    <!-- 8. Explorer Drop Target Button Style -->
     <Style x:Key="DropZoneButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>

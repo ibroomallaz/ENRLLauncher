@@ -57,6 +57,11 @@
                                             </ProgressBar.Resources>
                                         </ProgressBar>
 
+                                        <!-- Edit Badge Overlay -->
+                                        <Button Style="{StaticResource CardEditButtonStyle}"
+                                                HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                                Margin="-4,-4,0,0"/>
+
                                         <!-- Delete Badge Overlay -->
                                         <Button Style="{StaticResource CardDeleteButtonStyle}"
                                                 HorizontalAlignment="Right" VerticalAlignment="Top" 

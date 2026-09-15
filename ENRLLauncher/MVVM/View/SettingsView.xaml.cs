@@ -2,7 +2,7 @@
 
 namespace ENRLLauncher.MVVM.View;
 
-public partial class SettingsView : UserControl
+public partial class SettingsView
 {
     public SettingsView()
     {

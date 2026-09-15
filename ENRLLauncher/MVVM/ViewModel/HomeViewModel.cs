@@ -1,11 +1,14 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Windows;
 using System.Windows.Input;
 using ENRLLauncher.Core.Enums;
 using ENRLLauncher.Core.Interfaces;
 using ENRLLauncher.Core.Utilities;
 using ENRLLauncher.MVVM.Model;
+using ENRLLauncher.MVVM.View.Dialogs;
+using ENRLLauncher.MVVM.ViewModel.Dialogs;
 
 namespace ENRLLauncher.MVVM.ViewModel;
 
@@ -51,6 +54,7 @@ public class HomeViewModel : ObservableObject
 
     public ICommand LaunchItemCommand { get; }
     public ICommand AddDroppedFileCommand { get; }
+    public ICommand EditItemCommand { get; }
     public ICommand RemoveItemCommand { get; }
     public ICommand OpenFilePickerCommand { get; }
     public ICommand AddHorizontalSeparatorCommand { get; }
@@ -85,6 +89,11 @@ public class HomeViewModel : ObservableObject
             if (param is string filePath) AddDroppedFile(filePath);
         });
 
+        EditItemCommand = new RelayCommand(param =>
+        {
+            if (param is LaunchItem item) OpenEditItemDialog(item);
+        });
+
         RemoveItemCommand = new RelayCommand(param =>
         {
             if (param is LaunchItem item && Items.Contains(item))
@@ -110,6 +119,34 @@ public class HomeViewModel : ObservableObject
         _ = LoadInitialLayoutAsync();
     }
 
+    public void OpenEditItemDialog(LaunchItem item)
+    {
+        if (item == null) return;
+
+        if (item.TargetType is LaunchTargetType.HorizontalSeparator
+            or LaunchTargetType.LongVerticalSeparator
+            or LaunchTargetType.ShortVerticalSeparator)
+        {
+            return;
+        }
+
+        var dialogVm = new EditLaunchItemDialogViewModel(item, _fileDialogService);
+        var dialog = new EditLaunchItemDialog
+        {
+            DataContext = dialogVm,
+            Owner = Application.Current?.MainWindow
+        };
+
+        dialogVm.RequestClose += () => dialog.Close();
+        dialog.ShowDialog();
+
+        if (dialogVm.Success)
+        {
+            RequestLayoutSave();
+            _logger?.Info(nameof(HomeViewModel), $"Updated item: {item.Title}");
+        }
+    }
+
     private void OnAppStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(IAppStateService.IsEditMode))
@@ -117,7 +154,7 @@ public class HomeViewModel : ObservableObject
             OnPropertyChanged(nameof(IsEditMode));
             OnPropertyChanged(nameof(IsDropCardVisible));
             StatusMessage = _appStateService.IsEditMode
-                ? "✏ Edit Mode Active — Drag cards to swap positions, click ✕ to delete"
+                ? "✎ Edit Mode Active — Drag cards to swap positions, click ✎ to edit, ✕ to delete"
                 : "All systems ready";
 
             // Immediate non-debounced flush on edit mode exit
