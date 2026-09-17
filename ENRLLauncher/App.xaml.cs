@@ -2,7 +2,6 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
-using System.Threading;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using ENRLLauncher.Core.Enums;
