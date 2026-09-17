@@ -5,5 +5,7 @@
         <ResourceDictionary Source="/Themes/Controls/Separators.xaml"/>
         <ResourceDictionary Source="/Themes/Controls/Cards.xaml"/>
         <ResourceDictionary Source="/Themes/Controls/EditMode.xaml"/>
+        <ResourceDictionary Source="/Themes/Controls/Buttons.xaml"/>
+        <ResourceDictionary Source="/Themes/Controls/ComboBoxes.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

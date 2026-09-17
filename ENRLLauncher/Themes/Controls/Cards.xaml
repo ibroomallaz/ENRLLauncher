@@ -196,4 +196,33 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <!-- 9. Settings Outer Container Pane Card Style -->
+    <Style x:Key="SettingsPaneCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface.Primary}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="20"/>
+    </Style>
+
+    <!-- 10. Setting Option / Section Card Style -->
+    <Style x:Key="SettingSectionCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface.Secondary}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="14"/>
+        <Setter Property="Margin" Value="0,0,0,14"/>
+    </Style>
+
+    <!-- 11. Setting Stat / Specification Readout Card Style -->
+    <Style x:Key="SettingInfoCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface.Primary}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="12,10"/>
+    </Style>
+
 </ResourceDictionary>

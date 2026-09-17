@@ -8,112 +8,6 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-
-        <!-- Dark ComboBox Toggle Button Template -->
-        <ControlTemplate x:Key="DarkComboBoxToggleButton" TargetType="ToggleButton">
-            <Border x:Name="border" Background="{TemplateBinding Background}"
-                    BorderBrush="{TemplateBinding BorderBrush}"
-                    BorderThickness="{TemplateBinding BorderThickness}"
-                    CornerRadius="5">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Path Grid.Column="1" Margin="0,0,10,0" Data="M 0 0 L 4 4 L 8 0 Z"
-                          Fill="{DynamicResource Brush.UA.Sky}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                </Grid>
-            </Border>
-            <ControlTemplate.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource Brush.UA.Oasis}"/>
-                    <Setter TargetName="border" Property="Background" Value="#1A335C"/>
-                </Trigger>
-            </ControlTemplate.Triggers>
-        </ControlTemplate>
-
-        <!-- Dark ComboBox Style -->
-        <Style x:Key="DarkComboBoxStyle" TargetType="ComboBox">
-            <Setter Property="Background" Value="#162B4D"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
-            <Setter Property="BorderBrush" Value="#1E3A5F"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Height" Value="32"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="ItemContainerStyle">
-                <Setter.Value>
-                    <Style TargetType="ComboBoxItem">
-                        <Setter Property="Background" Value="#0C2340"/>
-                        <Setter Property="Foreground" Value="#FFFFFF"/>
-                        <Setter Property="Padding" Value="10,6"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ComboBoxItem">
-                                    <Border x:Name="itemBorder" Background="{TemplateBinding Background}"
-                                            Padding="{TemplateBinding Padding}">
-                                        <ContentPresenter/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsHighlighted" Value="True">
-                                            <Setter TargetName="itemBorder" Property="Background" Value="#1E3A5F"/>
-                                            <Setter Property="Foreground" Value="#FFFFFF"/>
-                                        </Trigger>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="itemBorder" Property="Background" Value="#294C7A"/>
-                                            <Setter Property="Foreground" Value="{DynamicResource Brush.UA.Sky}"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBox">
-                        <Grid>
-                            <ToggleButton Focusable="False"
-                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                          ClickMode="Press"
-                                          Background="{TemplateBinding Background}"
-                                          BorderBrush="{TemplateBinding BorderBrush}"
-                                          BorderThickness="{TemplateBinding BorderThickness}"
-                                          Template="{StaticResource DarkComboBoxToggleButton}"/>
-                            <ContentPresenter IsHitTestVisible="False"
-                                              Content="{TemplateBinding SelectionBoxItem}"
-                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
-                                              Margin="10,0,24,0"
-                                              VerticalAlignment="Center"
-                                              HorizontalAlignment="Left"/>
-                            <Popup x:Name="PART_Popup"
-                                   IsOpen="{TemplateBinding IsDropDownOpen}"
-                                   Placement="Bottom"
-                                   Focusable="False"
-                                   AllowsTransparency="True"
-                                   PopupAnimation="Slide">
-                                <Border Background="#0C2340"
-                                        BorderBrush="#1E3A5F"
-                                        BorderThickness="1"
-                                        CornerRadius="5"
-                                        MinWidth="{TemplateBinding ActualWidth}"
-                                        MaxHeight="200"
-                                        Margin="0,2,0,0">
-                                    <Border.Effect>
-                                        <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.5"/>
-                                    </Border.Effect>
-                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
-                                    </ScrollViewer>
-                                </Border>
-                            </Popup>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
     </UserControl.Resources>
 
     <Grid Margin="16,10,16,16">
@@ -134,9 +28,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Left Pane: Application Preferences & Save Action -->
-            <Border Grid.Column="0" Background="{DynamicResource Brush.Surface.Primary}" 
-                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                    CornerRadius="10" Padding="20" Margin="0,0,16,0">
+            <Border Grid.Column="0" Style="{StaticResource SettingsPaneCardStyle}" Margin="0,0,16,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -150,9 +42,7 @@
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,14">
                         <StackPanel>
                             <!-- Start in Fullscreen -->
-                            <Border Background="{DynamicResource Brush.Surface.Secondary}" 
-                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                                    CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                            <Border Style="{StaticResource SettingSectionCardStyle}">
                                 <StackPanel>
                                     <CheckBox Content="Start in Fullscreen mode" 
                                               IsChecked="{Binding StartInFullScreen}"
@@ -165,9 +55,7 @@
                             </Border>
 
                             <!-- Launch on Windows Startup -->
-                            <Border Background="{DynamicResource Brush.Surface.Secondary}" 
-                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                                    CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                            <Border Style="{StaticResource SettingSectionCardStyle}">
                                 <StackPanel>
                                     <CheckBox Content="Launch app on Windows startup" 
                                               IsChecked="{Binding LaunchOnWindowsStartup}"
@@ -180,9 +68,7 @@
                             </Border>
 
                             <!-- Edit Mode PIN Protection -->
-                            <Border Background="{DynamicResource Brush.Surface.Secondary}" 
-                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                                    CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                            <Border Style="{StaticResource SettingSectionCardStyle}">
                                 <StackPanel>
                                     <CheckBox Content="Require PIN for Edit Mode" 
                                               IsChecked="{Binding RequirePinForEditMode}"
@@ -196,24 +82,13 @@
                                                 Visibility="{Binding RequirePinForEditMode, Converter={StaticResource BoolToVis}}">
                                         <Button Content="Change PIN&#x2026;" 
                                                 Command="{Binding ChangePinCommand}"
-                                                Background="{DynamicResource Brush.Surface.Tertiary}"
-                                                Foreground="{DynamicResource Brush.Text.Primary}"
-                                                Padding="12,5" FontSize="11" FontWeight="SemiBold"
-                                                BorderThickness="0" Cursor="Hand">
-                                            <Button.Resources>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="CornerRadius" Value="4"/>
-                                                </Style>
-                                            </Button.Resources>
-                                        </Button>
+                                                Style="{StaticResource SecondaryActionButtonStyle}"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
 
                             <!-- Logging Level Selection -->
-                            <Border Background="{DynamicResource Brush.Surface.Secondary}" 
-                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                                    CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                            <Border Style="{StaticResource SettingSectionCardStyle}">
                                 <StackPanel>
                                     <TextBlock Text="Logging Level" 
                                                Foreground="{DynamicResource Brush.Text.Primary}" 
@@ -235,9 +110,7 @@
                     </ScrollViewer>
 
                     <!-- Save Action Section -->
-                    <Border Grid.Row="2" Background="{DynamicResource Brush.Surface.Secondary}" 
-                            BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                            CornerRadius="8" Padding="14">
+                    <Border Grid.Row="2" Style="{StaticResource SettingSectionCardStyle}" Margin="0">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -254,26 +127,14 @@
 
                             <Button Grid.Column="1" Content="Save Changes" 
                                     Command="{Binding SaveSettingsCommand}" 
-                                    Padding="18,8" 
-                                    Background="{DynamicResource Brush.Success}" 
-                                    Foreground="{DynamicResource Brush.Text.OnAccent}" 
-                                    FontWeight="Bold" FontSize="12"
-                                    BorderThickness="0" Cursor="Hand">
-                                <Button.Resources>
-                                    <Style TargetType="Border">
-                                        <Setter Property="CornerRadius" Value="6"/>
-                                    </Style>
-                                </Button.Resources>
-                            </Button>
+                                    Style="{StaticResource SuccessActionButtonStyle}"/>
                         </Grid>
                     </Border>
                 </Grid>
             </Border>
 
             <!-- Right Pane: Updates, About & Storage Controls -->
-            <Border Grid.Column="1" Background="{DynamicResource Brush.Surface.Primary}" 
-                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                    CornerRadius="10" Padding="20">
+            <Border Grid.Column="1" Style="{StaticResource SettingsPaneCardStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -287,9 +148,7 @@
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <!-- Software Updates Section -->
-                            <Border Background="{DynamicResource Brush.Surface.Secondary}" 
-                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                                    CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                            <Border Style="{StaticResource SettingSectionCardStyle}">
                                 <StackPanel>
                                     <!-- Header Row with Status Badge -->
                                     <Grid Margin="0,0,0,10">
@@ -362,9 +221,7 @@
                                     </Grid>
 
                                     <!-- Current Version & Status Info -->
-                                    <Border Background="{DynamicResource Brush.Surface.Primary}" 
-                                            BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                                            CornerRadius="6" Padding="12,10" Margin="0,0,0,10">
+                                    <Border Style="{StaticResource SettingInfoCardStyle}" Margin="0,0,0,10">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
@@ -404,36 +261,20 @@
                                     <WrapPanel>
                                         <Button Content="Check for Updates" 
                                                 Command="{Binding CheckForUpdatesCommand}" 
-                                                Background="{DynamicResource Brush.Surface.Tertiary}" 
-                                                Foreground="{DynamicResource Brush.Text.Primary}" 
-                                                Padding="14,6" Margin="0,0,8,0" BorderThickness="0" Cursor="Hand">
-                                            <Button.Resources>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="CornerRadius" Value="4"/>
-                                                </Style>
-                                            </Button.Resources>
-                                        </Button>
+                                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                                Margin="0,0,8,0"/>
 
                                         <Button Content="{Binding UpdateButtonLabel, FallbackValue='Install Update'}" 
                                                 Command="{Binding InstallUpdateCommand}" 
                                                 Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVis}}"
-                                                Background="{DynamicResource Brush.UA.Red}" 
-                                                Foreground="#FFFFFF" FontWeight="Bold"
-                                                Padding="16,6" Margin="0,0,8,0" BorderThickness="0" Cursor="Hand">
-                                            <Button.Resources>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="CornerRadius" Value="4"/>
-                                                </Style>
-                                            </Button.Resources>
-                                        </Button>
+                                                Style="{StaticResource DangerActionButtonStyle}"
+                                                Margin="0,0,8,0"/>
                                     </WrapPanel>
                                 </StackPanel>
                             </Border>
 
                             <!-- About Section -->
-                            <Border Background="{DynamicResource Brush.Surface.Secondary}" 
-                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                                    CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                            <Border Style="{StaticResource SettingSectionCardStyle}">
                                 <StackPanel>
                                     <!-- App Header with Logo -->
                                     <Grid Margin="0,0,0,12">
@@ -459,9 +300,7 @@
                                     </Grid>
 
                                     <!-- Version & Developer Specifications Grid -->
-                                    <Border Background="{DynamicResource Brush.Surface.Primary}" 
-                                            BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                                            CornerRadius="6" Padding="12,10" Margin="0,0,0,12">
+                                    <Border Style="{StaticResource SettingInfoCardStyle}" Margin="0,0,0,12">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
@@ -498,15 +337,7 @@
 
                                         <Button Grid.Column="0" Content="GitHub Repository" 
                                                 Command="{Binding OpenGitHubCommand}" 
-                                                Background="{DynamicResource Brush.Surface.Tertiary}" 
-                                                Foreground="{DynamicResource Brush.Text.Primary}" 
-                                                Padding="12,6" BorderThickness="0" Cursor="Hand">
-                                            <Button.Resources>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="CornerRadius" Value="4"/>
-                                                </Style>
-                                            </Button.Resources>
-                                        </Button>
+                                                Style="{StaticResource SecondaryActionButtonStyle}"/>
 
                                         <TextBlock Grid.Column="1" Text="{Binding DeveloperCredit}" 
                                                    Foreground="{DynamicResource Brush.Text.Muted}" FontSize="11" 
@@ -516,9 +347,7 @@
                             </Border>
 
                             <!-- Layout Backup Section -->
-                            <Border Background="{DynamicResource Brush.Surface.Secondary}" 
-                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                                    CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                            <Border Style="{StaticResource SettingSectionCardStyle}">
                                 <StackPanel>
                                     <TextBlock Text="Layout Configuration" FontWeight="SemiBold" 
                                                Foreground="{DynamicResource Brush.Text.Primary}" FontSize="13"/>
@@ -528,27 +357,22 @@
                                     <WrapPanel>
                                         <Button Content="Backup Layout to File&#x2026;" 
                                                 Command="{Binding ExportLayoutCommand}" 
-                                                Background="{DynamicResource Brush.Surface.Tertiary}" 
-                                                Foreground="{DynamicResource Brush.Text.Primary}" 
-                                                Padding="12,6" Margin="0,0,8,8" BorderThickness="0" Cursor="Hand"/>
+                                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                                Margin="0,0,8,8"/>
                                         <Button Content="Restore Layout from File&#x2026;" 
                                                 Command="{Binding ImportLayoutCommand}" 
-                                                Background="{DynamicResource Brush.Surface.Tertiary}" 
-                                                Foreground="{DynamicResource Brush.Text.Primary}" 
-                                                Padding="12,6" Margin="0,0,8,8" BorderThickness="0" Cursor="Hand"/>
+                                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                                Margin="0,0,8,8"/>
                                         <Button Content="Restore from Auto-Backup (.bak)" 
                                                 Command="{Binding RestoreAutoBackupCommand}" 
-                                                Background="{DynamicResource Brush.Surface.Tertiary}" 
-                                                Foreground="{DynamicResource Brush.Text.Primary}" 
-                                                Padding="12,6" Margin="0,0,8,8" BorderThickness="0" Cursor="Hand"/>
+                                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                                Margin="0,0,8,8"/>
                                     </WrapPanel>
                                 </StackPanel>
                             </Border>
 
                             <!-- Storage Directories Section -->
-                            <Border Background="{DynamicResource Brush.Surface.Secondary}" 
-                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                                    CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                            <Border Style="{StaticResource SettingSectionCardStyle}">
                                 <StackPanel>
                                     <TextBlock Text="System &amp; Storage Locations" FontWeight="SemiBold" 
                                                Foreground="{DynamicResource Brush.Text.Primary}" FontSize="13"/>
@@ -558,14 +382,12 @@
                                     <WrapPanel>
                                         <Button Content="Open Data Directory" 
                                                 Command="{Binding OpenAppDataFolderCommand}" 
-                                                Background="{DynamicResource Brush.Surface.Tertiary}" 
-                                                Foreground="{DynamicResource Brush.Text.Primary}" 
-                                                Padding="12,6" Margin="0,0,8,8" BorderThickness="0" Cursor="Hand"/>
+                                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                                Margin="0,0,8,8"/>
                                         <Button Content="Open Logs Directory" 
                                                 Command="{Binding OpenLogsFolderCommand}" 
-                                                Background="{DynamicResource Brush.Surface.Tertiary}" 
-                                                Foreground="{DynamicResource Brush.Text.Primary}" 
-                                                Padding="12,6" Margin="0,0,8,8" BorderThickness="0" Cursor="Hand"/>
+                                                Style="{StaticResource SecondaryActionButtonStyle}"
+                                                Margin="0,0,8,8"/>
                                     </WrapPanel>
                                 </StackPanel>
                             </Border>
@@ -573,9 +395,8 @@
                     </ScrollViewer>
 
                     <!-- Backup Status Feedback Bar -->
-                    <Border Grid.Row="2" Background="{DynamicResource Brush.Surface.Secondary}" 
-                            BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" 
-                            CornerRadius="8" Padding="12" Margin="0,10,0,0">
+                    <Border Grid.Row="2" Style="{StaticResource SettingSectionCardStyle}" 
+                            Padding="12" Margin="0,10,0,0">
                         <TextBlock Text="{Binding BackupStatusMessage, FallbackValue='Ready'}" 
                                    Foreground="{DynamicResource Brush.UA.Sky}" 
                                    FontSize="12" FontWeight="SemiBold"/>
