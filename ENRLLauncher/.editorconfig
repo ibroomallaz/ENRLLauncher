@@ -1,0 +1,21 @@
+﻿[*.cs]
+# Disable ReSharper / Rider inspections suggesting 'var'
+resharper_suggest_var_or_type_built_in_types_highlighting = none
+resharper_suggest_var_or_type_simple_types_highlighting = none
+resharper_suggest_var_or_type_elsewhere_highlighting = none
+resharper_suggest_var_or_type_deconstruction_declarations_highlighting = none
+
+# ReSharper / Rider syntax style preference: prefer explicit types
+csharp_for_built_in_types = use_explicit_type:none
+csharp_for_simple_types = use_explicit_type:none
+csharp_for_other_types = use_explicit_type:none
+resharper_csharp_var_for_built_in_types = use_explicit_type
+resharper_csharp_var_for_simple_types = use_explicit_type
+resharper_csharp_var_for_other_types = use_explicit_type
+
+# Standard Roslyn code style: do not enforce var, ignore rule
+csharp_style_var_for_built_in_types = false:none
+csharp_style_var_when_type_is_apparent = false:none
+csharp_style_var_elsewhere = false:none
+dotnet_diagnostic.IDE0007.severity = none
+dotnet_diagnostic.IDE0008.severity = none

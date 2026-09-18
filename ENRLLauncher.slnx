@@ -2,8 +2,10 @@
   <Project Path="ENRLLauncher/ENRLLauncher.csproj" />
   <Project Path="ENRLLauncher.Installer/ENRLLauncher.Installer.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0">
     <Build Solution="*|*" Project="true" />
+    <BuildDependency Project="ENRLLauncher/ENRLLauncher.csproj" />
   </Project>
   <Project Path="ENRLLauncher.Bootstrapper/ENRLLauncher.Bootstrapper.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0">
     <Build Solution="*|*" Project="true" />
+    <BuildDependency Project="ENRLLauncher.Installer/ENRLLauncher.Installer.wixproj" />
   </Project>
 </Solution>

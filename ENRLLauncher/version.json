@@ -1,0 +1,29 @@
+﻿{
+  "$schema": "./MVVM/Model/Schema/VersionSchema.cs",
+  "schemaVersion": 1,
+  "appVersion": "1.0.0-alpha",
+  "lastModifiedUtc": "2026-09-17T19:50:00Z",
+  "Version": {
+    "Current": {
+      "version": "1.0.0",
+      "location": "https://github.com/ibroomallaz/ENRLLauncher/releases",
+      "msiUrl": "https://arizona.box.com/shared/static/placeholder_stable_installer.msi",
+      "setupUrl": "https://arizona.box.com/shared/static/placeholder_stable_setup.exe",
+      "requiredDotNetVersion": "10.0.0",
+      "changelog": "Testing, not a real release."
+    },
+    "PreRelease": {
+      "exists": true,
+      "version": "1.0.0-Alpha",
+      "location": "https://github.com/ibroomallaz/ENRLLauncher/releases",
+      "msiUrl": "https://arizona.box.com/shared/static/placeholder_alpha_installer.msi",
+      "setupUrl": "https://arizona.box.com/shared/static/placeholder_alpha_setup.exe",
+      "requiredDotNetVersion": "10.0.0",
+      "changelog": "Arizona Admissions Launcher v1.0.0-Alpha:\n• New modern UI styling and cards\n• Integrated update checker and runtime bootstrapping\n• Logging configuration and diagnostic tools"
+    }
+  },
+  "Required": {
+    "minVersion": null,
+    "message": null
+  }
+}

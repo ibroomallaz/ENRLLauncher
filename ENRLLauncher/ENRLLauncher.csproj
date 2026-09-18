@@ -7,12 +7,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <Title>Arizona Admissions Launcher</Title>
-    <Version>1.0.0-Alpha</Version>
+    <Version>1.0.0-RC1</Version>
     <PackageProjectUrl>https://github.com/ibroomallaz/ENRLLauncher</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ibroomallaz/ENRLLauncher</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <AssemblyVersion>1.0.1001</AssemblyVersion>
-    <FileVersion>1.0.1001</FileVersion>
+    <AssemblyVersion>1.0.1091</AssemblyVersion>
+    <FileVersion>1.0.1091</FileVersion>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <Company>University of Arizona</Company>
     <Authors>Isaac Broomall</Authors>

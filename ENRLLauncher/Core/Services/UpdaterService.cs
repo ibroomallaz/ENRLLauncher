@@ -124,7 +124,8 @@ public class UpdaterService : IUpdaterService
 
         if (!string.IsNullOrEmpty(appPath))
         {
-            var psCommand = $"-Command \"Start-Process '{fileName}' -ArgumentList '{arguments}' -Wait; Start-Process '{appPath}' -ArgumentList '-updated'\"";
+            var currentPid = Environment.ProcessId;
+            var psCommand = $"-Command \"Wait-Process -Id {currentPid} -ErrorAction SilentlyContinue; Start-Process '{fileName}' -ArgumentList '{arguments}' -Wait; Start-Process '{appPath}' -ArgumentList '-updated'\"";
 
             Process.Start(new ProcessStartInfo
             {

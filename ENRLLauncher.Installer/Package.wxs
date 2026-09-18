@@ -1,5 +1,6 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package Name="Arizona Admissions Launcher"
            Manufacturer="UArizona"
            Version="!(bind.fileVersion.ENRLLauncherExe)"
@@ -12,13 +13,30 @@
 
     <Icon Id="AppIcon" SourceFile="..\ENRLLauncher\Assets\app.ico" />
     <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/ibroomallaz/ENRLLauncher" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/ibroomallaz/ENRLLauncher" />
+    <Property Id="ARPCOMMENTS" Value="Arizona Admissions Launcher" />
+
+    <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLFOLDER]" After="CostFinalize" />
 
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Arizona Admissions Launcher" />
+    <Property Id="WixShellExecTarget" Value="[!ENRLLauncherExe]" />
+    <CustomAction Id="LaunchApplication" BinaryRef="Wix4UtilCA_X64" DllEntry="WixShellExec" Impersonate="yes" />
+
+    <util:CloseApplication Id="CloseENRLLauncher"
+                           Target="ENRLLauncher.exe"
+                           CloseMessage="yes"
+                           Description="Arizona Admissions Launcher is currently running and must be closed to continue."
+                           PromptToContinue="yes"
+                           RebootPrompt="no" />
 
     <UI>
       <ui:WixUI Id="WixUI_InstallDir" />
       <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2" Condition="NOT Installed" />
       <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication" Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed" />
     </UI>
 
     <WixVariable Id="WixUIBannerBmp" Value="Resources\banner.bmp" />
@@ -47,6 +65,7 @@
 
       <Files Include="!(bindpath.ENRLLauncher)\**">
         <Exclude Files="!(bindpath.ENRLLauncher)\ENRLLauncher.exe" />
+        <Exclude Files="!(bindpath.ENRLLauncher)\*.pdb" />
       </Files>
     </ComponentGroup>
 
@@ -73,13 +92,16 @@
         <RemoveFolder Id="RemoveProductFolder" Directory="ProductFolder" On="uninstall" />
         <RemoveFolder Id="RemoveCompanyFolder" Directory="CompanyFolder" On="uninstall" />
 
-        <!-- Registry tracking for per-user component KeyPath -->
-        <RegistryValue Root="HKCU"
-                       Key="Software\UArizona\ENRLLauncher"
-                       Name="Installed"
-                       Type="integer"
-                       Value="1"
-                       KeyPath="yes" />
+        <!-- Registry tracking for per-user component KeyPath and cleanup on uninstall -->
+        <RegistryKey Root="HKCU"
+                     Key="Software\UArizona\ENRLLauncher"
+                     ForceCreateOnInstall="yes"
+                     ForceDeleteOnUninstall="yes">
+          <RegistryValue Name="Installed"
+                         Type="integer"
+                         Value="1"
+                         KeyPath="yes" />
+        </RegistryKey>
       </Component>
     </ComponentGroup>
 
