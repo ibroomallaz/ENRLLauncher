@@ -5,11 +5,16 @@
     <Platforms>AnyCPU;x64</Platforms>
     <Configurations>Debug;Release</Configurations>
     <InstallerPlatform>x64</InstallerPlatform>
+    <OutputPath>..\artifacts\$(Configuration)\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WixToolset.BootstrapperApplications.wixext" Version="7.0.0" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="7.0.0" />
+    <PackageReference Include="WixToolset.BootstrapperApplications.wixext" Version="5.0.2" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
   </ItemGroup>
 
   <ItemGroup>

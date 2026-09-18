@@ -7,11 +7,16 @@
     <InstallerPlatform>x64</InstallerPlatform>
     <SuppressIces>ICE38;ICE64;ICE91</SuppressIces>
     <SuppressValidation>true</SuppressValidation>
+    <OutputPath>..\artifacts\$(Configuration)\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WixToolset.UI.wixext" Version="7.0.0" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="7.0.0" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
   </ItemGroup>
 
   <ItemGroup>

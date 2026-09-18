@@ -1,7 +1,8 @@
-﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Package Name="Arizona Admissions Launcher"
            Manufacturer="UArizona"
-           Version="0.0.1.0"
+           Version="!(bind.fileVersion.ENRLLauncherExe)"
            UpgradeCode="B534BC6A-1E32-4735-9F1B-9477ED12A345"
            Scope="perUser">
 
@@ -12,10 +13,21 @@
     <Icon Id="AppIcon" SourceFile="..\ENRLLauncher\Assets\app.ico" />
     <Property Id="ARPPRODUCTICON" Value="AppIcon" />
 
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+    <UI>
+      <ui:WixUI Id="WixUI_InstallDir" />
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2" Condition="NOT Installed" />
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2" />
+    </UI>
+
+    <WixVariable Id="WixUIBannerBmp" Value="Resources\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="Resources\dialog.bmp" />
+
     <StandardDirectory Id="LocalAppDataFolder">
-      <Directory Id="ProgramsFolder" Name="Programs">
-        <Directory Id="CompanyFolder" Name="UArizona">
-          <Directory Id="INSTALLFOLDER" Name="ENRLLauncher" />
+      <Directory Id="CompanyFolder" Name="UArizona">
+        <Directory Id="ProductFolder" Name="ENRLLauncher">
+          <Directory Id="INSTALLFOLDER" Name="App" />
         </Directory>
       </Directory>
     </StandardDirectory>
@@ -27,7 +39,15 @@
     <StandardDirectory Id="DesktopFolder" />
 
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-      <Files Include="!(bindpath.ENRLLauncher)\**" />
+      <Component Id="CmpENRLLauncherExe" Guid="A3D1E4A1-6571-4B9E-A2E7-347F9B1E62C1">
+        <File Id="ENRLLauncherExe"
+              Source="!(bindpath.ENRLLauncher)\ENRLLauncher.exe"
+              KeyPath="yes" />
+      </Component>
+
+      <Files Include="!(bindpath.ENRLLauncher)\**">
+        <Exclude Files="!(bindpath.ENRLLauncher)\ENRLLauncher.exe" />
+      </Files>
     </ComponentGroup>
 
     <ComponentGroup Id="ProductShortcuts">
@@ -35,7 +55,7 @@
         <Shortcut Id="ApplicationStartMenuShortcut"
                   Name="Arizona Admissions Launcher"
                   Description="Arizona Admissions Launcher"
-                  Target="[INSTALLFOLDER]ENRLLauncher.exe"
+                  Target="[!ENRLLauncherExe]"
                   WorkingDirectory="INSTALLFOLDER"
                   Icon="AppIcon" />
 
@@ -43,13 +63,14 @@
                   Directory="DesktopFolder"
                   Name="Arizona Admissions Launcher"
                   Description="Arizona Admissions Launcher"
-                  Target="[INSTALLFOLDER]ENRLLauncher.exe"
+                  Target="[!ENRLLauncherExe]"
                   WorkingDirectory="INSTALLFOLDER"
                   Icon="AppIcon" />
 
         <!-- Clean up per-user directories on uninstall -->
         <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
         <RemoveFolder Id="RemoveINSTALLFOLDER" Directory="INSTALLFOLDER" On="uninstall" />
+        <RemoveFolder Id="RemoveProductFolder" Directory="ProductFolder" On="uninstall" />
         <RemoveFolder Id="RemoveCompanyFolder" Directory="CompanyFolder" On="uninstall" />
 
         <!-- Registry tracking for per-user component KeyPath -->
