@@ -67,11 +67,8 @@ public class CenteredWrapPanel : Panel
             }
         }
 
-        if (firstInLine < InternalChildren.Count)
-        {
-            ArrangeLine(accumulatedHeight, curLineSize, finalSize.Width, firstInLine, InternalChildren.Count);
-            accumulatedHeight += curLineSize.Height;
-        }
+        if (firstInLine >= InternalChildren.Count) return finalSize;
+        ArrangeLine(accumulatedHeight, curLineSize, finalSize.Width, firstInLine, InternalChildren.Count);
 
         return finalSize;
     }

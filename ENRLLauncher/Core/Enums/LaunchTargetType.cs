@@ -8,5 +8,5 @@ public enum LaunchTargetType
     Document,      // PDF, Word, or general file association
     HorizontalSeparator, // Full row break
     LongVerticalSeparator, // Long column break
-    ShortVerticalSeparator, // Short column break
+    ShortVerticalSeparator // Short column break
 }

@@ -3,7 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:ENRLLauncher.MVVM.ViewModel"
              mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance vm:SettingsViewModel}"
              d:DesignHeight="700" d:DesignWidth="1100">
 
     <UserControl.Resources>
@@ -292,7 +294,7 @@
                                         </Border>
 
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                            <TextBlock Text="Arizona Admissions Launcher" FontWeight="Bold" 
+                                            <TextBlock Text="{Binding AppName}" FontWeight="Bold" 
                                                        Foreground="{DynamicResource Brush.Text.Primary}" FontSize="14"/>
                                             <TextBlock Text="University of Arizona &#x2022; Enrollment Management" 
                                                        Foreground="{DynamicResource Brush.UA.Sky}" FontSize="11" Margin="0,2,0,0"/>

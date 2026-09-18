@@ -10,7 +10,7 @@ public class LauncherService : ILauncherService
 {
     public bool CanLaunch(LaunchItem? item)
     {
-        if (item == null || !item.IsEnabled || string.IsNullOrWhiteSpace(item.TargetPath))
+        if (item is not { IsEnabled: true } || string.IsNullOrWhiteSpace(item.TargetPath))
         {
             return false;
         }
@@ -48,7 +48,7 @@ public class LauncherService : ILauncherService
         });
     }
 
-    private ProcessStartInfo CreateStartInfo(LaunchItem item)
+    private static ProcessStartInfo CreateStartInfo(LaunchItem item)
     {
         var psi = new ProcessStartInfo
         {

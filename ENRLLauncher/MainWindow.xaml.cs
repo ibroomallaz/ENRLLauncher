@@ -52,20 +52,22 @@ public partial class MainWindow
     }
 
     // Retrieves a handle to the display monitor that has the largest area of intersection with a window handle
-    [DllImport("user32.dll")]
-    private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+    [LibraryImport("user32.dll")]
+    private static partial IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
 
     // Retrieves a handle to the display monitor that contains a specified screen point
-    [DllImport("user32.dll")]
-    private static extern IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
+    [LibraryImport("user32.dll")]
+    private static partial IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
 
     // Retrieves information about a display monitor, such as its physical bounding rectangle
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+    [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
 
     // Retrieves the current cursor position in physical screen coordinates
-    [DllImport("user32.dll")]
-    private static extern bool GetCursorPos(out POINT lpPoint);
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetCursorPos(out POINT lpPoint);
 
     // --- State Fields ---
 
@@ -150,27 +152,24 @@ public partial class MainWindow
         }
 
         // 3. Query the monitor dimensions and convert physical pixels to WPF DIPs
-        if (monitorHandle != IntPtr.Zero)
-        {
-            var mi = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
-            if (GetMonitorInfo(monitorHandle, ref mi))
-            {
-                // Retrieve DPI scaling factor for this visual to account for high-DPI displays (e.g. 125%, 150%)
-                var dpi = VisualTreeHelper.GetDpi(this);
-                var dpiX = dpi.DpiScaleX > 0 ? dpi.DpiScaleX : 1.0;
-                var dpiY = dpi.DpiScaleY > 0 ? dpi.DpiScaleY : 1.0;
+        if (monitorHandle == IntPtr.Zero)
+            return new Rect(0, 0, SystemParameters.PrimaryScreenWidth, SystemParameters.PrimaryScreenHeight);
+        var mi = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+        if (!GetMonitorInfo(monitorHandle, ref mi))
+            return new Rect(0, 0, SystemParameters.PrimaryScreenWidth, SystemParameters.PrimaryScreenHeight);
+        // Retrieve DPI scaling factor for this visual to account for high-DPI displays (e.g. 125%, 150%)
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var dpiX = dpi.DpiScaleX > 0 ? dpi.DpiScaleX : 1.0;
+        var dpiY = dpi.DpiScaleY > 0 ? dpi.DpiScaleY : 1.0;
 
-                // Divide raw physical pixels by DPI scale to produce WPF coordinate units
-                return new Rect(
-                    mi.rcMonitor.Left / dpiX,
-                    mi.rcMonitor.Top / dpiY,
-                    (mi.rcMonitor.Right - mi.rcMonitor.Left) / dpiX,
-                    (mi.rcMonitor.Bottom - mi.rcMonitor.Top) / dpiY);
-            }
-        }
+        // Divide raw physical pixels by DPI scale to produce WPF coordinate units
+        return new Rect(
+            mi.rcMonitor.Left / dpiX,
+            mi.rcMonitor.Top / dpiY,
+            (mi.rcMonitor.Right - mi.rcMonitor.Left) / dpiX,
+            (mi.rcMonitor.Bottom - mi.rcMonitor.Top) / dpiY);
 
         // Fallback to WPF primary screen parameters if monitor resolution fails
-        return new Rect(0, 0, SystemParameters.PrimaryScreenWidth, SystemParameters.PrimaryScreenHeight);
     }
 
     // Positions and sizes the window to completely cover the target monitor (true kiosk mode)
@@ -189,17 +188,15 @@ public partial class MainWindow
 
     private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton == MouseButton.Left)
+        if (e.ChangedButton != MouseButton.Left) return;
+        if (e.ClickCount == 2)
         {
-            if (e.ClickCount == 2)
-            {
-                ToggleFullScreen();
-                return;
-            }
-            if (!_isFullScreen)
-            {
-                DragMove();
-            }
+            ToggleFullScreen();
+            return;
+        }
+        if (!_isFullScreen)
+        {
+            DragMove();
         }
     }
 
@@ -210,16 +207,9 @@ public partial class MainWindow
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.F11)
-        {
-            ToggleFullScreen();
-            e.Handled = true;
-        }
-        else if (e.Key == Key.Escape && _isFullScreen)
-        {
-            ToggleFullScreen();
-            e.Handled = true;
-        }
+        if (e.Key != Key.F11 && (e.Key != Key.Escape || !_isFullScreen)) return;
+        ToggleFullScreen();
+        e.Handled = true;
     }
 
     // Applies or exits fullscreen presentation kiosk mode
@@ -227,13 +217,14 @@ public partial class MainWindow
     {
         WindowStartupLocation = WindowStartupLocation.Manual;
 
-        if (enable && !_isFullScreen)
+        switch (enable)
         {
-            EnterFullScreen();
-        }
-        else if (!enable && _isFullScreen)
-        {
-            ExitFullScreen();
+            case true when !_isFullScreen:
+                EnterFullScreen();
+                break;
+            case false when _isFullScreen:
+                ExitFullScreen();
+                break;
         }
     }
 

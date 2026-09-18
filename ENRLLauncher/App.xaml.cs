@@ -16,7 +16,7 @@ using ENRLLauncher.MVVM.ViewModel;
 
 namespace ENRLLauncher;
 
-public partial class App : Application
+public partial class App
 {
     private const string AppMutexName = @"Local\ENRLLauncher_SingleInstance_Mutex";
     private const int SW_RESTORE = 9;
@@ -35,7 +35,7 @@ public partial class App : Application
     private Mutex? _singleInstanceMutex;
     private bool _hasMutexOwnership;
 
-    public static IServiceProvider Services { get; private set; } = null!;
+    private static IServiceProvider Services { get; set; } = null!;
 
     private void ConfigureServices(IServiceCollection services)
     {
@@ -65,6 +65,7 @@ public partial class App : Application
         services.AddSingleton<MainWindow>(sp => new MainWindow(sp.GetRequiredService<MainWindowViewModel>()));
     }
 
+    // ReSharper disable once AsyncVoidEventHandlerMethod
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -134,7 +135,7 @@ public partial class App : Application
                             {
                                 Directory.CreateDirectory(targetDir);
                             }
-                            File.WriteAllText(authFilePath, $"VERIFIED:{identity.Name}:{DateTime.UtcNow:O}");
+                            await File.WriteAllTextAsync(authFilePath, $"VERIFIED:{identity.Name}:{DateTime.UtcNow:O}");
                         }
                         catch { /* ignore */ }
                     }
@@ -246,10 +247,7 @@ public partial class App : Application
         {
             var settingsService = Services.GetRequiredService<ISettingsService>();
             startupSettings = await settingsService.LoadSettingsAsync();
-            if (_logger != null && startupSettings != null)
-            {
-                _logger.MinimumLevel = startupSettings.LogLevel;
-            }
+            _logger?.MinimumLevel = startupSettings.LogLevel;
         }
         catch (Exception ex)
         {
@@ -258,7 +256,7 @@ public partial class App : Application
 
         // 4. Update Check on Splash Screen
         Mark("Checking for updates");
-        _logger.Write(AppLogLevel.Info, "Startup", "Initiating update check on splash screen");
+        _logger?.Write(AppLogLevel.Info, "Startup", "Initiating update check on splash screen");
         try
         {
             var updateUi = Services.GetRequiredService<VersionCheckerUI>();
@@ -270,16 +268,16 @@ public partial class App : Application
                 await updateTask;
                 if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished) return;
                 Mark("Update check complete");
-                _logger.Write(AppLogLevel.Info, "Startup", "Splash update check completed successfully");
+                _logger?.Write(AppLogLevel.Info, "Startup", "Splash update check completed successfully");
             }
             else
             {
-                _logger.Write(AppLogLevel.Warning, "Startup", "Splash update check exceeded 3s timeout; continuing startup");
+                _logger?.Write(AppLogLevel.Warning, "Startup", "Splash update check exceeded 3s timeout; continuing startup");
             }
         }
         catch (Exception ex)
         {
-            _logger.Write(AppLogLevel.Warning, "Startup", $"Splash update check failed: {ex.Message}");
+            _logger?.Write(AppLogLevel.Warning, "Startup", $"Splash update check failed: {ex.Message}");
         }
 
         // Brief delay to ensure smooth splash presentation
@@ -293,7 +291,7 @@ public partial class App : Application
         // Apply startup window preferences
         if (startupSettings?.StartInFullScreen == true)
         {
-            mainWindow.ApplyFullScreen(true);
+            mainWindow.ApplyFullScreen();
         }
 
         // 6. Dismiss splash upon first window render and check optional updates
@@ -338,15 +336,13 @@ public partial class App : Application
             var existingProcess = Process.GetProcessesByName(current.ProcessName)
                 .FirstOrDefault(p => p.Id != current.Id);
 
-            if (existingProcess != null && existingProcess.MainWindowHandle != IntPtr.Zero)
+            if (existingProcess == null || existingProcess.MainWindowHandle == IntPtr.Zero) return;
+            var handle = existingProcess.MainWindowHandle;
+            if (IsIconic(handle))
             {
-                var handle = existingProcess.MainWindowHandle;
-                if (IsIconic(handle))
-                {
-                    ShowWindow(handle, SW_RESTORE);
-                }
-                SetForegroundWindow(handle);
+                ShowWindow(handle, SW_RESTORE);
             }
+            SetForegroundWindow(handle);
         }
         catch
         {
@@ -380,7 +376,7 @@ public partial class App : Application
             fl.Dispose();
         }
 
-        if (Services?.GetService<IHttpService>() is IDisposable http)
+        if (Services.GetService<IHttpService>() is IDisposable http)
         {
             http.Dispose();
         }

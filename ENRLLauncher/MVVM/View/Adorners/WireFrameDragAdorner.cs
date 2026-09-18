@@ -37,8 +37,8 @@ public class WireframeDragAdorner : Adorner
     protected override void OnRender(DrawingContext dc)
     {
         var rect = new Rect(
-            _location.X - (_cardSize.Width / 2),
-            _location.Y - (_cardSize.Height / 2),
+            _location.X - _cardSize.Width / 2,
+            _location.Y - _cardSize.Height / 2,
             _cardSize.Width,
             _cardSize.Height);
 

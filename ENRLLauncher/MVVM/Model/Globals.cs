@@ -7,12 +7,13 @@ namespace ENRLLauncher.MVVM.Model
     {
 #pragma warning disable CA2211 // Non-constant fields should not be visible
         public static readonly string g_AppVersion = VersionDisplayHelper.GetSemVerDisplay();
-        public static string g_FileVersion = VersionDisplayHelper.GetFileVersionDisplay();
+        public static readonly string g_FileVersion = VersionDisplayHelper.GetFileVersionDisplay();
 #pragma warning restore CA2211 // Non-constant fields should not be visible
 
         // Remote Box static JSON locations
-        public const string g_VersionJSON = "https://arizona.box.com/shared/static/placeholder_version.json";
+        public const string g_VersionJSON = "https://arizona.box.com/shared/static/l6yto202sysvgle052f6boidz3kyvzq1.json";
         public const string g_TestVersionJSON = "https://arizona.box.com/shared/static/placeholder_test_version.json";
+        public const string g_GithubUrl = "https://github.com/ibroomallaz/ENRLLauncher";
 
         // Application data directories (local)
         public static readonly string g_AppDir =

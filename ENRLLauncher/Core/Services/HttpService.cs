@@ -77,17 +77,8 @@ public sealed class HttpService : IHttpService, IDisposable
 
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    private void Dispose(bool disposing)
-    {
         if (_disposed) return;
-        if (disposing)
-        {
-            _client.Dispose();
-        }
+        _client.Dispose();
         _disposed = true;
     }
 }
